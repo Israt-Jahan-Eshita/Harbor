@@ -1,74 +1,154 @@
 # Harbor: Family Care Manager
 
-**Harbor** is a Bangla-first household care web app for multi-condition households (diabetes, hypertension, kidney disease, high uric acid, food allergies) managed by one caregiver.
+**Harbor** is a bilingual (Bangla-first, full Bangla / English conversion) Progressive Web App designed for multi-condition households managed by a single family caregiver. When family members manage overlapping dietary needs and medication schedules—such as chronic kidney disease, diabetes, hypertension, elevated uric acid, and food allergies—Harbor identifies shared-pot meals that everyone can safely eat or split at a specific cooking step, tracks pantry inventory using Bangla units, plans monthly grocery budgets, and delivers meal-timed medication reminders.
 
-## Core Design Decision
+---
 
-**AI reads and explains; deterministic Python code decides.**
+## System Architecture
 
-- **Deterministic Core (`backend/app/core/`):** All food-safety rules (`check_dish_safe`), shared-pot checks (`find_shared_pot_dishes`), scoring, Bangla quantity normalization, inventory math, reminder scheduling, and response validation run in pure Python with zero network or LLM calls.
-- **Bounded AI Layer (`backend/app/llm/`):** Handles speech-to-text, informal Bangla event parsing, prescription photo extraction (with all doses stripped), and short Bangla dish explanations—always parsed with Pydantic and verified by `core/validator.py` with fixed Bangla template fallbacks.
-- **Caregiver Confirmation Gate:** Nothing extracted from a prescription or voice/text event log becomes active until the caregiver explicitly confirms it on screen.
+Harbor enforces a strict separation between natural-language parsing/explanation and safety-critical decision making: **AI reads and explains; deterministic Python code decides.**
 
-## Guardrails
+![Harbor System Architecture](assets/architecture.svg)
 
-1. AI never decides food safety.
-2. Harbor never suggests, changes, or stops a medicine, and never states a dose.
-3. Caregiver confirmation is required before prescriptions or stock/household events take effect.
-4. Unknown ingredients or unmapped medicines evaluate to `UNVERIFIED` and are excluded.
-5. Every LLM explanation passes the grounded validator before display, or falls back to a fixed template.
-6. Seed rules are prototype data compiled from general nutrition and pharmacology references (**not clinically reviewed**; would require review by a pharmacist or dietitian before real use).
-7. Notifications and lock-screen text never include disease or medicine names (`"ওষুধের সময় হয়েছে"`).
-8. Prices are labelled approximate (`"আনুমানিক"`).
-9. Consent is collected before third-party uploads; prescription images are not stored.
+### Architectural Layers
 
-## Verified Stack Versions
+| Layer | Module Path | Responsibility | External Network / LLM Calls |
+| :--- | :--- | :--- | :--- |
+| **Client PWA** | `frontend/` | Caregiver workspace, confirmation gates, patient reminder screen, EN/BN switcher, warm Light/Dark UI | REST calls to FastAPI |
+| **API & Tool Gateway** | `backend/app/api/`, `backend/app/mcp/` | Authenticated REST endpoints, signed `confirmation_token` verification, FastMCP 13-tool server | Request handling only |
+| **Deterministic Core** | `backend/app/core/` | Dish safety checks, shared-pot splitting, scoring, Bangla unit normalization, inventory math, reminder FSM, validator, bazar planner | Strictly zero |
+| **Bounded AI Layer** | `backend/app/llm/` | Prescription extraction (doses stripped), Bangla voice/text event parsing, bounded planning agent (<= 6 read calls), grounded explanations | Groq & Gemini APIs |
+| **Persistence & Alerts** | PostgreSQL 18, `services/` | 19-table relational schema via Alembic, audit logs (`llm_calls`), VAPID Web Push, SMTP escalation, `/internal/tick` | PostgreSQL, Web Push, SMTP |
 
-### Backend (Python 3.11.9)
-- `fastapi==0.165.0`, `uvicorn==0.54.0`
-- `pydantic==2.14.4`, `pydantic-settings==2.16.3`
-- `sqlalchemy==2.1.9`, `alembic==1.20.1`, `psycopg[binary]==3.3.9`
-- `rapidfuzz==3.14.6`, `fastmcp==4.2.4`
-- `groq==1.7.0`, `google-genai==3.6.1`
-- `pywebpush==2.5.0`, `bcrypt==5.0.0`, `itsdangerous==2.2.0`
-- `pytest==9.2.0`, `pytest-asyncio==1.5.0`, `httpx==0.28.1`
+---
 
-### Frontend (Node.js v24.16.0 / Next.js App Router)
-- `next==16.4.6`, `react==19.3.1`, `react-dom==19.3.1`
-- `tailwindcss==4.3.5`, `@tailwindcss/postcss==4.3.5`, `typescript==5.9.3`
-- `@tanstack/react-query==5.108.2`, `lucide-react==0.540.0`
-- `vitest==3.2.7`, `@testing-library/react==16.3.3`
+## Core Engineering & Safety Guardrails
 
-## Local Setup (Backend)
+1. **Zero AI Food-Safety Authority:** `backend/app/llm/` never computes or overrides safety verdicts. All dish eligibility evaluates deterministically through `check_dish_safe` and `find_shared_pot_dishes` in pure Python.
+2. **Non-Prescriptive Medication Boundaries:** Harbor never recommends starting, stopping, or changing medications and never parses, stores, displays, or outputs medication dosages.
+3. **Mandatory Caregiver Confirmation Gate:** Prescription extractions and parsed voice/text household events remain inert drafts until explicitly verified and submitted by the caregiver with a server-signed HMAC `confirmation_token`.
+4. **Fail-Safe `UNVERIFIED` Handling:** Unmapped ingredients, unmapped drug classes, or unverified member medicines cause affected dishes to evaluate to `UNVERIFIED` and remain excluded from recommendations.
+5. **Grounded Explanation Validator:** Every LLM-generated dish explanation passes deterministic lexical verification (`core/validator.py`) against actual engine outputs before reaching the UI, automatically falling back to verified Bangla/English templates on mismatch or API outage.
+6. **Prototype Clinical Scope Notice:** Reference seed data (`51` ingredients, `172` Bangla/English aliases, `40` Bangladeshi recipes, `5` drug classes, `4` drug-food rules, `4` diet presets) is compiled from general nutrition and pharmacology references and requires review by a qualified pharmacist or dietitian prior to clinical deployment.
+7. **Privacy-Preserving Patient Mode & Notifications:** Lock-screen Web Push payloads and the `/patient/[token]` reminder screen display strictly generic prompts (for example, `"ওষুধের সময় হয়েছে"` / `"Time for medicine"`) with zero disease names, condition tags, or medicine names.
+8. **Approximate Pricing Disclosure:** All estimated ingredient and monthly bazar prices carry explicit `"আনুমানিক"` / `"Estimated"` markers unless backed by recent household purchase observations.
+9. **Transient Media Handling & Consent:** Caregiver consent is verified (`consent_given`) prior to calling third-party AI APIs on prescription photos or voice recordings. Raw prescription images and audio bytes are processed strictly in memory and never persisted to disk or database columns.
 
-1. Ensure PostgreSQL is running (either local PostgreSQL 18 or `docker compose up -d db`) with databases `harbor_dev` and `harbor_test`.
-2. Copy `backend/.env.example` to `backend/.env` and fill in `DATABASE_URL`, `TEST_DATABASE_URL`, `SESSION_SECRET`, `TICK_SECRET`, and API keys.
-3. Create and activate the virtual environment:
-   ```powershell
-   cd backend
-   python -m venv .venv
-   .\.venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
-4. Run Alembic migrations and load prototype seed data:
-   ```powershell
-   alembic upgrade head
-   python -m app.seed.load
-   ```
-5. Run the API server and test suite:
-   ```powershell
-   uvicorn app.main:app --reload
-   pytest
-   ```
+---
 
-## Local Setup (Frontend)
+## REST API Surface
 
-1. Copy `frontend/.env.example` to `frontend/.env.local`.
-2. Install packages and run tests / dev server:
-   ```powershell
-   cd frontend
-   npm install
-   npm test
-   npm run lint
-   npm run dev
-   ```
+All caregiver routes require `Authorization: Bearer <token>` obtained via `/households`, `/households/login`, or `/households/demo`. Error responses return structured JSON (`{ "code", "message", "details" }`).
+
+| Domain | Endpoints | Purpose |
+| :--- | :--- | :--- |
+| **System** | `GET /healthz`, `GET /drug-classes`, `GET /eval/results` | Database readiness, modelled drug-class catalog, measured evaluation artifact access |
+| **Households** | `POST /households`, `POST /households/login`, `POST /households/demo`, `GET /households/{id}/state`, `PATCH /households/{id}/settings` | Registration/login, demo household (`DEMO26`), consolidated state, meal times & consent |
+| **Members & Meds** | `GET/POST /members`, `GET/PATCH/DELETE /members/{id}`, `POST/PATCH/DELETE /members/{id}/medicines/{med_id}` | Member profiles (conditions, allergies, presets), verified medicines, daily dose scheduling |
+| **Prescriptions** | `POST /members/{id}/prescription`, `POST /prescriptions/{id}/confirm` | Transient Gemini vision draft extraction (zero doses) and signed caregiver confirmation |
+| **Events & Stock** | `POST /events/parse`, `POST /events/confirm`, `GET /stock`, `POST /stock/adjust` | Voice/text Bangla event draft chips, ledger commits, non-negative stock calculation, manual adjustments |
+| **Daily Menu** | `POST /menu/suggest`, `POST /menu/review`, `POST /menu/cooked` | Shared-pot top-3 ranking, guest/absence re-evaluation, cooked ingredient deductions |
+| **Bazar** | `POST /bazar/build`, `POST /bazar/confirm`, `POST /bazar/purchased`, `GET /bazar/latest` | Monthly ingredient aggregation, seasonality, safe substitutions, budget trimming, purchase logging |
+| **Reminders & Alerts** | `GET /reminders/due`, `POST /reminders/{dose_id}/taken`, `GET /dashboard/doses`, `POST /push/subscribe`, `POST /internal/tick` | Token-scoped patient polling & confirmation, caregiver dose dashboard, push subscriptions, cron tick |
+| **Engine Explorer** | `GET /engine/catalog`, `POST /engine/check` | Read-only deterministic rule trace inspection for any household or custom profile |
+
+---
+
+## Verified Technology Stack
+
+| Component | Technology & Exact Versions |
+| :--- | :--- |
+| **Backend Runtime** | Python `3.11.9`, FastAPI `0.165.0`, Uvicorn `0.54.0`, Pydantic `2.14.4`, Pydantic Settings `2.16.3` |
+| **Database & Migrations** | PostgreSQL `18` (`harbor_dev`, `harbor_test`), SQLAlchemy `2.1.9`, Alembic `1.20.1`, Psycopg `3.3.9` |
+| **MCP & Security** | FastMCP `4.2.4`, `bcrypt==5.0.0`, `itsdangerous==2.2.0`, `pywebpush==2.5.0`, `rapidfuzz==3.14.6` |
+| **AI Providers (Transient / Bounded)** | Groq (`groq==1.7.0`: `openai/gpt-oss-120b`, `whisper-large-v3`), Google Gemini (`google-genai==3.6.1`: `gemini-3.5-flash`) |
+| **Frontend & UI** | Node.js `v24.16.0`, Next.js `16.4.6` (App Router), React `19.3.1`, Tailwind CSS `4.3.5`, TypeScript `5.9.3`, TanStack Query `5.108.2`, Lucide React `0.540.0` |
+| **Testing Tooling** | Backend: `pytest==9.2.0`, `pytest-asyncio==1.5.0`, `httpx==0.28.1`; Frontend: `vitest==3.2.7`, `@testing-library/react==16.3.3` |
+
+---
+
+## Repository Layout
+
+| Path | Description |
+| :--- | :--- |
+| `assets/architecture.svg` | 2D vector system architecture diagram |
+| `backend/app/core/` | Pure-Python deterministic rules, shared-pot planner, scoring, Bangla qty normalizer, inventory, validator, templates, reminders, bazar |
+| `backend/app/llm/` | Groq & Gemini clients, Pydantic extraction prompts, bounded MCP agent, grounded explanation generator |
+| `backend/app/mcp/` | FastMCP 13-tool server enforcing read/write separation and `confirmation_token` checks |
+| `backend/app/api/` | FastAPI HTTP routers and Pydantic schemas (`schemas.py`) |
+| `backend/app/seed/` | Prototype dataset (`51` ingredients, `40` recipes, `DEMO26`), validation script, idempotent DB loader |
+| `backend/alembic/` | Database schema migration scripts (`19` tables) |
+| `backend/tests/` | Unit, scenario, mocked LLM contract, live smoke, and PostgreSQL REST integration tests |
+| `frontend/app/` | Next.js App Router pages, global styles, and warm Neu/Skeu/Glass Light/Dark tokens |
+| `frontend/components/` | Reusable accessible UI primitives and `AppShell` navigation |
+| `frontend/lib/` | Typed API client (`api.ts`), bilingual i18n provider (`i18n.tsx`), theme & session contexts, WCAG contrast audit helper |
+| `frontend/messages/` | Synchronized Bangla (`bn.json`) and English (`en.json`) translation catalogs |
+
+---
+
+## Local Development Setup
+
+### 1. Prerequisites
+- Python `3.11+`
+- Node.js `20+`
+- PostgreSQL `18` running locally (or via `docker compose up -d db`) with databases `harbor_dev` and `harbor_test`
+
+### 2. Backend Setup
+
+```powershell
+cd backend
+Copy-Item .env.example .env
+# Populate DATABASE_URL, TEST_DATABASE_URL, SESSION_SECRET, TICK_SECRET, GROQ_API_KEY, GEMINI_API_KEY
+
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+
+alembic upgrade head
+python -m app.seed.load
+uvicorn app.main:app --reload
+```
+
+### 3. Frontend Setup
+
+```powershell
+cd frontend
+Copy-Item .env.example .env.local
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000`. Use `/welcome` to create a household or sign in with the seeded demo credentials (Access Code: `DEMO26`, Caregiver PIN: `1234`).
+
+---
+
+## Verification Commands
+
+### Backend
+
+```powershell
+cd backend
+# Pure deterministic + mocked contract + PostgreSQL integration suite
+pytest tests -v
+
+# Include live Groq & Gemini smoke verification (requires API keys in backend/.env)
+$env:HARBOR_LIVE_TESTS = '1'
+pytest tests -v
+```
+
+### Frontend
+
+```powershell
+cd frontend
+npm test
+npm run lint
+npm run build
+```
+
+> **Windows Build Note:** `package.json` configures `"build": "next build --webpack"` for reliable Next.js `16.4.6` production compilation on Windows.
+
+---
+
+## Disclaimer
+
+Harbor is an engineering prototype built to demonstrate deterministic multi-constraint family meal planning, grounded LLM output validation, and caregiver-in-the-loop safety gating. Seed nutrition, allergen, and drug-food rules have **not** undergone clinical pharmacist or dietitian review and must not be used for medical decision making without qualified clinical validation.

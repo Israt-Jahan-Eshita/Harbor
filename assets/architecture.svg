@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 796" width="100%" role="img" aria-labelledby="arch-title arch-desc">
+  <title id="arch-title">Harbor System Architecture</title>
+  <desc id="arch-desc">Four-layer architecture showing Next.js PWA clients, FastAPI and FastMCP gateway, deterministic Python safety core separated from bounded AI intake and explanation layers, and PostgreSQL, Groq, Gemini, and notification services.</desc>
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FAF6F0" />
+      <stop offset="100%" stop-color="#F2E9DD" />
+    </linearGradient>
+    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#A84420" />
+      <stop offset="55%" stop-color="#B95424" />
+      <stop offset="100%" stop-color="#C26B18" />
+    </linearGradient>
+    <linearGradient id="coreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFDF9" />
+      <stop offset="100%" stop-color="#F9F1E6" />
+    </linearGradient>
+    <linearGradient id="llmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFFBF4" />
+      <stop offset="100%" stop-color="#F9EAD7" />
+    </linearGradient>
+    <filter id="cardShadow" x="-4%" y="-6%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#4A3525" flood-opacity="0.10" />
+    </filter>
+    <filter id="laneShadow" x="-2%" y="-4%" width="104%" height="110%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#4A3525" flood-opacity="0.06" />
+    </filter>
+    <marker id="arrowTerracotta" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#A84420" />
+    </marker>
+    <marker id="arrowUmber" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#6B5B4D" />
+    </marker>
+    <marker id="arrowSaffron" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8.5 5 L 0 8.5 z" fill="#B55E14" />
+    </marker>
+  </defs>
+
+  <style>
+    .font-sans { font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
+    .font-mono { font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace; }
+    .lane-bg { fill: #FAF5ED; stroke: #DECBB7; stroke-width: 1.5; rx: 16; }
+    .card { fill: #FFFDF9; stroke: #D8C5B0; stroke-width: 1.3; rx: 12; }
+    .mini-card { fill: #FFFFFF; stroke: #E2D2C1; stroke-width: 1.1; rx: 9; }
+    .pill-terracotta { fill: #A84420; rx: 6; }
+    .pill-saffron { fill: #B55E14; rx: 6; }
+    .pill-umber { fill: #6B5B4D; rx: 6; }
+    .title-dark { fill: #241C16; font-weight: 700; }
+    .text-body { fill: #4E4034; }
+    .text-muted { fill: #756354; }
+    .pill-text { fill: #FFFDF9; font-weight: 700; letter-spacing: 0.5px; }
+  </style>
+
+  <!-- Canvas -->
+  <rect x="0" y="0" width="1200" height="796" fill="url(#bgGrad)" />
+
+  <!-- Top Header Banner -->
+  <rect x="24" y="16" width="1152" height="58" rx="14" fill="url(#headerGrad)" filter="url(#cardShadow)" />
+  <text x="48" y="42" class="font-sans" font-size="20" font-weight="800" fill="#FFFDF9">Harbor: Family Care Manager — System Architecture</text>
+  <text x="48" y="61" class="font-sans" font-size="12.5" fill="#FBEADB">AI Reads and Explains  |  Deterministic Python Core Decides Safety  |  Caregiver Confirmation Gates Every Mutation</text>
+  <rect x="945" y="29" width="212" height="32" rx="16" fill="#241C16" fill-opacity="0.24" stroke="#FFFDF9" stroke-opacity="0.35" />
+  <text x="1051" y="49" text-anchor="middle" class="font-mono" font-size="11.5" font-weight="700" fill="#FFFDF9">EN &lt;-&gt; BN | WARM PWA</text>
+
+  <!-- LAYER 1: CLIENT PWA (y=88..206) -->
+  <rect x="24" y="88" width="1152" height="118" class="lane-bg" filter="url(#laneShadow)" />
+  <rect x="40" y="99" width="246" height="22" class="pill-terracotta" />
+  <text x="163" y="114" text-anchor="middle" class="font-sans pill-text" font-size="10.5">LAYER 1: CLIENT PWA (NEXT.JS 16)</text>
+
+  <rect x="40" y="130" width="356" height="64" class="card" filter="url(#cardShadow)" />
+  <text x="56" y="151" class="font-sans title-dark" font-size="13.5">Caregiver Web App (Light / Dark)</text>
+  <text x="56" y="169" class="font-sans text-body" font-size="11.5">Menu, Bazar, Stock, Members, Doses, Engine</text>
+  <text x="56" y="185" class="font-mono text-muted" font-size="10.5">Tailwind v4 | Neu / Skeu / Glass | EN &lt;-&gt; BN</text>
+
+  <rect x="422" y="130" width="356" height="64" class="card" filter="url(#cardShadow)" />
+  <text x="438" y="151" class="font-sans title-dark" font-size="13.5">Caregiver Draft &amp; Confirmation Gate</text>
+  <text x="438" y="169" class="font-sans text-body" font-size="11.5">Prescription Table Review + Voice/Text Event Chips</text>
+  <text x="438" y="185" class="font-mono text-muted" font-size="10.5">Explicit approval required before DB activation</text>
+
+  <rect x="804" y="130" width="356" height="64" class="card" filter="url(#cardShadow)" />
+  <text x="820" y="151" class="font-sans title-dark" font-size="13.5">Patient View (/patient/[token])</text>
+  <text x="820" y="169" class="font-sans text-body" font-size="11.5">Single-Button Taken Dome  |  15s Polling + Push</text>
+  <text x="820" y="185" class="font-mono text-muted" font-size="10.5">Zero disease names or medicine names displayed</text>
+
+  <!-- Connectors L1 -> L2 (gap y=206..238) -->
+  <line x1="218" y1="206" x2="218" y2="236" stroke="#A84420" stroke-width="2" marker-end="url(#arrowTerracotta)" />
+  <text x="228" y="224" class="font-mono text-muted" font-size="10">HTTPS + Bearer Token</text>
+  <line x1="600" y1="206" x2="600" y2="236" stroke="#A84420" stroke-width="2" marker-end="url(#arrowTerracotta)" />
+  <text x="610" y="224" class="font-mono text-muted" font-size="10">Signed Confirm Payload</text>
+  <line x1="982" y1="206" x2="982" y2="236" stroke="#6B5B4D" stroke-width="2" marker-end="url(#arrowUmber)" />
+  <text x="992" y="224" class="font-mono text-muted" font-size="10">Patient Token Query</text>
+
+  <!-- LAYER 2: API & TOOL GATEWAY (y=238..354) -->
+  <rect x="24" y="238" width="1152" height="116" class="lane-bg" filter="url(#laneShadow)" />
+  <rect x="40" y="249" width="268" height="22" class="pill-umber" />
+  <text x="174" y="264" text-anchor="middle" class="font-sans pill-text" font-size="10.5">LAYER 2: API &amp; MCP GATEWAY (FASTAPI)</text>
+
+  <rect x="40" y="280" width="356" height="62" class="card" filter="url(#cardShadow)" />
+  <text x="56" y="301" class="font-sans title-dark" font-size="13.5">REST API Routers &amp; Rate Limiter</text>
+  <text x="56" y="319" class="font-sans text-body" font-size="11.5">Households, Members, Menu, Bazar, Stock, Engine</text>
+  <text x="56" y="334" class="font-mono text-muted" font-size="10.5">/reminders/* | /dashboard/doses | /internal/tick</text>
+
+  <rect x="422" y="280" width="356" height="62" class="card" filter="url(#cardShadow)" />
+  <text x="438" y="301" class="font-sans title-dark" font-size="13.5">Confirmation &amp; Consent Guard</text>
+  <text x="438" y="319" class="font-sans text-body" font-size="11.5">HMAC confirmation_token + Privacy Consent Check</text>
+  <text x="438" y="334" class="font-mono text-muted" font-size="10.5">Rejects unconfirmed Rx or event writes (HTTP 403)</text>
+
+  <rect x="804" y="280" width="356" height="62" class="card" filter="url(#cardShadow)" />
+  <text x="820" y="301" class="font-sans title-dark" font-size="13.5">FastMCP 13-Tool Server</text>
+  <text x="820" y="319" class="font-sans text-body" font-size="11.5">Strict Separation: Read Tools vs Write Tools</text>
+  <text x="820" y="334" class="font-mono text-muted" font-size="10.5">Agent whitelist restricts reads only (max 6 calls)</text>
+
+  <!-- Connectors L2 -> L3 (gap y=354..386) -->
+  <line x1="218" y1="354" x2="218" y2="384" stroke="#A84420" stroke-width="2" marker-end="url(#arrowTerracotta)" />
+  <text x="228" y="372" class="font-mono text-muted" font-size="10">Deterministic Execution</text>
+  <line x1="600" y1="354" x2="600" y2="384" stroke="#6B5B4D" stroke-width="2" marker-end="url(#arrowUmber)" />
+  <text x="610" y="372" class="font-mono text-muted" font-size="10">Validated Draft Commits</text>
+  <line x1="982" y1="354" x2="982" y2="384" stroke="#B55E14" stroke-width="2" marker-end="url(#arrowSaffron)" />
+  <text x="992" y="372" class="font-mono text-muted" font-size="10">MCP Read-Only Tools</text>
+
+  <!-- LAYER 3: DECISION BOUNDARY (y=386..600) -->
+  <rect x="24" y="386" width="1152" height="214" class="lane-bg" filter="url(#laneShadow)" />
+
+  <!-- Left Box: Deterministic Core (x=40..626) -->
+  <rect x="40" y="398" width="586" height="190" rx="14" fill="url(#coreGrad)" stroke="#A84420" stroke-width="2" filter="url(#cardShadow)" />
+  <rect x="54" y="409" width="330" height="22" class="pill-terracotta" />
+  <text x="219" y="424" text-anchor="middle" class="font-sans pill-text" font-size="10.5">DETERMINISTIC PYTHON CORE (app/core/)</text>
+  <rect x="472" y="409" width="140" height="22" rx="6" fill="#F2E2D4" stroke="#A84420" stroke-width="1" />
+  <text x="542" y="423" text-anchor="middle" class="font-mono" font-size="9.5" font-weight="700" fill="#873315">PURE PYTHON ONLY</text>
+
+  <rect x="54" y="441" width="178" height="63" class="mini-card" />
+  <text x="64" y="459" class="font-sans title-dark" font-size="12">Safety Rules Engine</text>
+  <text x="64" y="475" class="font-mono text-body" font-size="10">check_dish_safe()</text>
+  <text x="64" y="491" class="font-sans text-muted" font-size="10.5">Allergens, drugs, age</text>
+
+  <rect x="244" y="441" width="178" height="63" class="mini-card" />
+  <text x="254" y="459" class="font-sans title-dark" font-size="12">Shared-Pot Engine</text>
+  <text x="254" y="475" class="font-mono text-body" font-size="10">find_shared_pot_dishes()</text>
+  <text x="254" y="491" class="font-sans text-muted" font-size="10.5">Split steps + guests</text>
+
+  <rect x="434" y="441" width="178" height="63" class="mini-card" />
+  <text x="444" y="459" class="font-sans title-dark" font-size="12">Scoring &amp; Bazar</text>
+  <text x="444" y="475" class="font-mono text-body" font-size="10">scoring.py / bazar.py</text>
+  <text x="444" y="491" class="font-sans text-muted" font-size="10.5">Pantry, price, substitutes</text>
+
+  <rect x="54" y="514" width="178" height="63" class="mini-card" />
+  <text x="64" y="532" class="font-sans title-dark" font-size="12">Inventory &amp; BN Qty</text>
+  <text x="64" y="548" class="font-mono text-body" font-size="10">bangla_qty / inventory</text>
+  <text x="64" y="564" class="font-sans text-muted" font-size="10.5">Poa/sera/kg, clamp &gt;=0</text>
+
+  <rect x="244" y="514" width="178" height="63" class="mini-card" />
+  <text x="254" y="532" class="font-sans title-dark" font-size="12">Reminder Machine</text>
+  <text x="254" y="548" class="font-mono text-body" font-size="10">reminders.py</text>
+  <text x="254" y="564" class="font-sans text-muted" font-size="10.5">Meal offsets &amp; alerts</text>
+
+  <rect x="434" y="514" width="178" height="63" class="mini-card" />
+  <text x="444" y="532" class="font-sans title-dark" font-size="12">Grounded Validator</text>
+  <text x="444" y="548" class="font-mono text-body" font-size="10">validator.py + templates</text>
+  <text x="444" y="564" class="font-sans text-muted" font-size="10.5">EN/BN fallback gate</text>
+
+  <!-- Decision Boundary Bridges (gap x=626..656) -->
+  <path d="M 656 472 L 628 472" stroke="#B55E14" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrowSaffron)" />
+  <path d="M 656 546 L 628 546" stroke="#A84420" stroke-width="2" marker-end="url(#arrowTerracotta)" />
+
+  <!-- Right Box: Bounded AI Layer (x=656..1160) -->
+  <rect x="656" y="398" width="504" height="190" rx="14" fill="url(#llmGrad)" stroke="#B55E14" stroke-width="2" filter="url(#cardShadow)" />
+  <rect x="670" y="409" width="256" height="22" class="pill-saffron" />
+  <text x="798" y="424" text-anchor="middle" class="font-sans pill-text" font-size="10.5">BOUNDED AI LAYER (app/llm/)</text>
+  <rect x="976" y="409" width="170" height="22" rx="6" fill="#F6DFC2" stroke="#B55E14" stroke-width="1" />
+  <text x="1061" y="423" text-anchor="middle" class="font-mono" font-size="9.5" font-weight="700" fill="#8C4B12">ZERO SAFETY AUTHORITY</text>
+
+  <rect x="670" y="441" width="232" height="63" class="mini-card" />
+  <text x="682" y="459" class="font-sans title-dark" font-size="12">Prescription Extractor</text>
+  <text x="682" y="475" class="font-mono text-body" font-size="10">extract_prescription.py</text>
+  <text x="682" y="491" class="font-sans text-muted" font-size="10.5">Doses stripped -&gt; draft table</text>
+
+  <rect x="914" y="441" width="232" height="63" class="mini-card" />
+  <text x="926" y="459" class="font-sans title-dark" font-size="12">Event &amp; STT Parser</text>
+  <text x="926" y="475" class="font-mono text-body" font-size="10">parse_events.py</text>
+  <text x="926" y="491" class="font-sans text-muted" font-size="10.5">Bangla voice/text -&gt; draft chips</text>
+
+  <rect x="670" y="514" width="232" height="63" class="mini-card" />
+  <text x="682" y="532" class="font-sans title-dark" font-size="12">Bounded Planning Agent</text>
+  <text x="682" y="548" class="font-mono text-body" font-size="10">agent.py (max 6 reads)</text>
+  <text x="682" y="564" class="font-sans text-muted" font-size="10.5">Selects &amp; ranks safe candidates</text>
+
+  <rect x="914" y="514" width="232" height="63" class="mini-card" />
+  <text x="926" y="532" class="font-sans title-dark" font-size="12">Bilingual Explainer</text>
+  <text x="926" y="548" class="font-mono text-body" font-size="10">explain.py (Pydantic JSON)</text>
+  <text x="926" y="564" class="font-sans text-muted" font-size="10.5">Verified by validator before UI</text>
+
+  <!-- Connectors L3 -> L4 (gap y=600..630) -->
+  <line x1="185" y1="600" x2="185" y2="628" stroke="#6B5B4D" stroke-width="2" marker-end="url(#arrowUmber)" />
+  <text x="195" y="618" class="font-mono text-muted" font-size="10">SQLAlchemy ORM</text>
+  <line x1="478" y1="600" x2="478" y2="628" stroke="#6B5B4D" stroke-width="2" marker-end="url(#arrowUmber)" />
+  <text x="488" y="618" class="font-mono text-muted" font-size="10">Reminder Dispatch</text>
+  <line x1="756" y1="600" x2="756" y2="628" stroke="#B55E14" stroke-width="2" marker-end="url(#arrowSaffron)" />
+  <text x="766" y="618" class="font-mono text-muted" font-size="10">Text / STT Inference</text>
+  <line x1="1032" y1="600" x2="1032" y2="628" stroke="#B55E14" stroke-width="2" marker-end="url(#arrowSaffron)" />
+  <text x="1042" y="618" class="font-mono text-muted" font-size="10">Vision Inference</text>
+
+  <!-- LAYER 4: STORAGE & EXTERNAL SERVICES (y=630..734) -->
+  <rect x="24" y="630" width="1152" height="104" class="lane-bg" filter="url(#laneShadow)" />
+  <rect x="40" y="639" width="268" height="20" class="pill-umber" />
+  <text x="174" y="653" text-anchor="middle" class="font-sans pill-text" font-size="10">LAYER 4: STORAGE &amp; INTEGRATIONS</text>
+
+  <rect x="40" y="665" width="290" height="58" class="card" filter="url(#cardShadow)" />
+  <text x="54" y="684" class="font-sans title-dark" font-size="13">PostgreSQL 18 (19 Tables)</text>
+  <text x="54" y="701" class="font-sans text-body" font-size="11">Alembic Schema + Event Ledger</text>
+  <text x="54" y="715" class="font-mono text-muted" font-size="10">Zero raw images/audio saved</text>
+
+  <rect x="348" y="665" width="260" height="58" class="card" filter="url(#cardShadow)" />
+  <text x="362" y="684" class="font-sans title-dark" font-size="13">Notifications &amp; Scheduler</text>
+  <text x="362" y="701" class="font-sans text-body" font-size="11">VAPID Web Push + SMTP Alerts</text>
+  <text x="362" y="715" class="font-mono text-muted" font-size="10">Cron POST /internal/tick</text>
+
+  <rect x="626" y="665" width="260" height="58" class="card" filter="url(#cardShadow)" />
+  <text x="640" y="684" class="font-sans title-dark" font-size="13">Groq Inference API</text>
+  <text x="640" y="701" class="font-mono text-body" font-size="10.5">openai/gpt-oss-120b</text>
+  <text x="640" y="715" class="font-mono text-muted" font-size="10">whisper-large-v3 (Bangla STT)</text>
+
+  <rect x="904" y="665" width="256" height="58" class="card" filter="url(#cardShadow)" />
+  <text x="918" y="684" class="font-sans title-dark" font-size="13">Google Gemini Vision</text>
+  <text x="918" y="701" class="font-mono text-body" font-size="10.5">gemini-3.5-flash (JSON Mode)</text>
+  <text x="918" y="715" class="font-mono text-muted" font-size="10">In-memory bytes purged immediately</text>
+
+  <!-- Bottom Guardrails Ribbon -->
+  <rect x="24" y="746" width="1152" height="36" rx="10" fill="#241C16" />
+  <text x="172" y="768" text-anchor="middle" class="font-sans" font-size="11.5" font-weight="600" fill="#FBEADB">01. Pure Python Safety Rules</text>
+  <text x="454" y="768" text-anchor="middle" class="font-sans" font-size="11.5" font-weight="600" fill="#FBEADB">02. Caregiver Confirmation Gate</text>
+  <text x="742" y="768" text-anchor="middle" class="font-sans" font-size="11.5" font-weight="600" fill="#FBEADB">03. UNVERIFIED Fail-Safe Exclusion</text>
+  <text x="1028" y="768" text-anchor="middle" class="font-sans" font-size="11.5" font-weight="600" fill="#FBEADB">04. Grounded Validator + Template Fallback</text>
+</svg>
