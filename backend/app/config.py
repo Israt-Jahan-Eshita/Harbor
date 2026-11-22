@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     llm_model: str = "openai/gpt-oss-120b"
     stt_model: str = "whisper-large-v3"
-    vision_model: str = "gemini-2.5-flash"
+    vision_model: str = "gemini-3.5-flash"
 
     # Security & App settings
     env: Literal["dev", "test", "prod"] = "dev"
