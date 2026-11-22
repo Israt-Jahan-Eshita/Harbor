@@ -1,9 +1,7 @@
-# Markdown / internal planning & living docs (keep local only; only track README.md)
-*.md
-!README.md
-docs/
+# Track README.md, docs/, and eval/results.md; keep root agent prompt & build plan untracked
 AGENT_PROMPT.md
 HARBOR_BUILD_PLAN.md
+*.scratch.md
 
 # Environment and secrets (NEVER commit)
 .env
