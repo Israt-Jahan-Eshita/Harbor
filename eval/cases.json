@@ -1,0 +1,541 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "author": "human_authored",
+    "description": "30 human-labelled safety benchmark cases (10 allergy, 10 multi_condition, 10 drug_food) built independently from engine outputs."
+  },
+  "cases": [
+    {
+      "case_id": "A01",
+      "category": "allergy",
+      "title": "Single member prawn allergy",
+      "prompt_bn": "আমাদের পরিবারে আরিফের চিংড়ি অ্যালার্জি আছে, আর বাবা-মার প্রেসারের জন্য কম লবণ (আলাদা অংশ) দরকার।",
+      "members": [
+        {"name": "আরিফ", "role": "child", "age_group": "child", "allergies": ["prawn_shellfish"], "diet_presets": [], "medicines": []},
+        {"name": "মা", "role": "patient", "age_group": "adult", "allergies": [], "diet_presets": ["low_sodium"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["lau_chingri", "rui_macher_jhol", "lau_masoor_dal", "murgir_jhol", "pepe_moog_dal", "dim_bhuna"],
+      "forbidden_recipe_keys": ["lau_chingri"],
+      "allowed_recipe_keys": ["rui_macher_jhol", "lau_masoor_dal", "murgir_jhol", "pepe_moog_dal", "dim_bhuna"],
+      "rationale": "lau_chingri contains prawn_shellfish which triggers Arif's allergy."
+    },
+    {
+      "case_id": "A02",
+      "category": "allergy",
+      "title": "Fish allergy vs shellfish distinction",
+      "prompt_bn": "নুসরাতের যেকোনো মাছে অ্যালার্জি আছে, তবে চিংড়িতে অ্যালার্জি নেই।",
+      "members": [
+        {"name": "নুসরাত", "role": "patient", "age_group": "adult", "allergies": ["fish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["rui_macher_jhol", "katla_begun_jhol", "shorshe_ilish", "lau_chingri", "murgir_jhol", "lau_masoor_dal"],
+      "forbidden_recipe_keys": ["rui_macher_jhol", "katla_begun_jhol", "shorshe_ilish"],
+      "allowed_recipe_keys": ["lau_chingri", "murgir_jhol", "lau_masoor_dal"],
+      "rationale": "All finfish dishes carry allergen tag 'fish' and are unsafe for Nusrat."
+    },
+    {
+      "case_id": "A03",
+      "category": "allergy",
+      "title": "Severe egg allergy across egg curries",
+      "prompt_bn": "ছোট ছেলে তানভীরের ডিমে তীব্র অ্যালার্জি আছে।",
+      "members": [
+        {"name": "তানভীর", "role": "child", "age_group": "child", "allergies": ["egg"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["dim_bhuna", "dim_begun_curry", "dim_badhakopi_bhaji", "murgir_jhol", "pepe_moog_dal", "rui_lau_jhol"],
+      "forbidden_recipe_keys": ["dim_bhuna", "dim_begun_curry", "dim_badhakopi_bhaji"],
+      "allowed_recipe_keys": ["murgir_jhol", "pepe_moog_dal", "rui_lau_jhol"],
+      "rationale": "dim_bhuna, dim_begun_curry, and dim_badhakopi_bhaji all contain egg."
+    },
+    {
+      "case_id": "A04",
+      "category": "allergy",
+      "title": "Milk/dairy allergy",
+      "prompt_bn": "সালমার দুধ ও দুগ্ধজাত খাবারে অ্যালার্জি রয়েছে।",
+      "members": [
+        {"name": "সালমা", "role": "patient", "age_group": "adult", "allergies": ["milk"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["dudh_kola_madhu", "lau_masoor_dal", "mishti_shobji", "murgir_jhol", "badhakopi_bhaji", "potol_bhuna"],
+      "forbidden_recipe_keys": ["dudh_kola_madhu"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "mishti_shobji", "murgir_jhol", "badhakopi_bhaji", "potol_bhuna"],
+      "rationale": "dudh_kola_madhu contains milk and must be excluded."
+    },
+    {
+      "case_id": "A05",
+      "category": "allergy",
+      "title": "Peanut allergy",
+      "prompt_bn": "রাশেদের চিনাবাদাম অ্যালার্জি আছে।",
+      "members": [
+        {"name": "রাশেদ", "role": "patient", "age_group": "adult", "allergies": ["peanut"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["badam_bhorta", "shosha_salad", "patla_masoor_dal", "jhinge_jhol", "dim_badhakopi_bhaji", "murgir_pepe_jhol"],
+      "forbidden_recipe_keys": ["badam_bhorta"],
+      "allowed_recipe_keys": ["shosha_salad", "patla_masoor_dal", "jhinge_jhol", "dim_badhakopi_bhaji", "murgir_pepe_jhol"],
+      "rationale": "badam_bhorta contains peanut allergen."
+    },
+    {
+      "case_id": "A06",
+      "category": "allergy",
+      "title": "Guest prawn and egg restrictions",
+      "prompt_bn": "আজ রাতে ২ জন অতিথি আসবেন, অতিথিদের মধ্যে চিংড়ি ও ডিমের অ্যালার্জি আছে।",
+      "members": [
+        {"name": "সুমাইয়া", "role": "caregiver", "age_group": "adult", "allergies": [], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [
+        {"guest_count": 2, "restrictions": ["prawn_shellfish", "egg"]}
+      ],
+      "candidate_recipe_keys": ["lau_chingri", "dim_bhuna", "dim_begun_curry", "lau_masoor_dal", "murgir_jhol", "koi_jhinge_jhol"],
+      "forbidden_recipe_keys": ["lau_chingri", "dim_bhuna", "dim_begun_curry"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "koi_jhinge_jhol"],
+      "rationale": "Temporary dinner guests restrict prawn_shellfish and egg."
+    },
+    {
+      "case_id": "A07",
+      "category": "allergy",
+      "title": "Multiple fish dishes plus egg allergy",
+      "prompt_bn": "পরিবারের শিশুর মাছ এবং ডিম—উভয় খাবারে অ্যালার্জি রয়েছে।",
+      "members": [
+        {"name": "রাইয়ান", "role": "child", "age_group": "child", "allergies": ["fish", "egg"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["tilapia_potol_jhol", "pangas_pepe_jhol", "dim_badhakopi_bhaji", "shorshe_ilish", "murgir_pepe_jhol", "chalkumra_moog_dal"],
+      "forbidden_recipe_keys": ["tilapia_potol_jhol", "pangas_pepe_jhol", "dim_badhakopi_bhaji", "shorshe_ilish"],
+      "allowed_recipe_keys": ["murgir_pepe_jhol", "chalkumra_moog_dal"],
+      "rationale": "Only chicken and lentil gourd dishes avoid both fish and egg."
+    },
+    {
+      "case_id": "A08",
+      "category": "allergy",
+      "title": "Household prawn allergy plus guest dairy restriction",
+      "prompt_bn": "আরিফের চিংড়ি অ্যালার্জি এবং আজকের একজন অতিথির দুধ বা ডেইরি অ্যালার্জি আছে।",
+      "members": [
+        {"name": "আরিফ", "role": "child", "age_group": "child", "allergies": ["prawn_shellfish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [
+        {"guest_count": 1, "restrictions": ["milk"]}
+      ],
+      "candidate_recipe_keys": ["lau_chingri", "dudh_kola_madhu", "badam_bhorta", "rui_macher_jhol", "pepe_moog_dal", "murgir_jhol"],
+      "forbidden_recipe_keys": ["lau_chingri", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["badam_bhorta", "rui_macher_jhol", "pepe_moog_dal", "murgir_jhol"],
+      "rationale": "Member allergy blocks lau_chingri and guest restriction blocks dudh_kola_madhu."
+    },
+    {
+      "case_id": "A09",
+      "category": "allergy",
+      "title": "Combined egg and peanut allergies across two members",
+      "prompt_bn": "দুই ভাইবোনের মধ্যে একজনের ডিম অ্যালার্জি আর আরেকজনের চিনাবাদাম অ্যালার্জি।",
+      "members": [
+        {"name": "মাহি", "role": "child", "age_group": "child", "allergies": ["egg"], "diet_presets": [], "medicines": []},
+        {"name": "সাদি", "role": "child", "age_group": "child", "allergies": ["peanut"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["dim_bhuna", "badam_bhorta", "dim_begun_curry", "lau_masoor_dal", "murgir_jhol", "begun_torkari"],
+      "forbidden_recipe_keys": ["dim_bhuna", "badam_bhorta", "dim_begun_curry"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "begun_torkari"],
+      "rationale": "Shared pot must avoid both egg and peanut allergens."
+    },
+    {
+      "case_id": "A10",
+      "category": "allergy",
+      "title": "Fish and prawn member plus peanut guest",
+      "prompt_bn": "রফিকের মাছ ও চিংড়িতে অ্যালার্জি আছে এবং অতিথির বাদাম অ্যালার্জি আছে।",
+      "members": [
+        {"name": "রফিক", "role": "patient", "age_group": "adult", "allergies": ["fish", "prawn_shellfish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [
+        {"guest_count": 1, "restrictions": ["peanut"]}
+      ],
+      "candidate_recipe_keys": ["rui_lau_jhol", "lau_chingri", "badam_bhorta", "murgir_jhol", "fulkopi_roast_curry", "chola_dal_bhuna"],
+      "forbidden_recipe_keys": ["rui_lau_jhol", "lau_chingri", "badam_bhorta"],
+      "allowed_recipe_keys": ["murgir_jhol", "fulkopi_roast_curry", "chola_dal_bhuna"],
+      "rationale": "Excludes fish, prawn_shellfish, and peanut recipes simultaneously."
+    },
+    {
+      "case_id": "M01",
+      "category": "multi_condition",
+      "title": "CKD low potassium diet blocks leafy greens and potato",
+      "prompt_bn": "বাবা কিডনি রোগী (CKD), ডাক্তার কম পটাশিয়ামযুক্ত খাবার খেতে বলেছেন।",
+      "members": [
+        {"name": "বাবা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_potassium"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["palong_shak_bhaji", "lal_shak_bhaji", "alu_murgi_curry", "lau_masoor_dal", "murgir_jhol", "potol_bhuna"],
+      "forbidden_recipe_keys": ["palong_shak_bhaji", "lal_shak_bhaji", "alu_murgi_curry"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "potol_bhuna"],
+      "rationale": "Spinach, red amaranth, and potato curry are high potassium and cannot be shared."
+    },
+    {
+      "case_id": "M02",
+      "category": "multi_condition",
+      "title": "Diabetes low GI + Hypertension low sodium split-safe",
+      "prompt_bn": "মায়ের ডায়াবেটিস (কম শর্করা/লো-জিআই) ও উচ্চ রক্তচাপ (কম লবণ, আলাদা অংশ লাগবে) আছে।",
+      "members": [
+        {"name": "মা", "role": "patient", "age_group": "elder", "allergies": [], "diet_presets": ["low_gi", "low_sodium"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["alu_fulkopi_jhol", "alu_murgi_curry", "dudh_kola_madhu", "korola_bhaji", "lau_masoor_dal", "rui_macher_jhol"],
+      "forbidden_recipe_keys": ["alu_fulkopi_jhol", "alu_murgi_curry", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["korola_bhaji", "lau_masoor_dal", "rui_macher_jhol"],
+      "rationale": "Potato dishes and honey milk-banana violate low_gi; other curries support salt split step."
+    },
+    {
+      "case_id": "M03",
+      "category": "multi_condition",
+      "title": "Elevated uric acid (low purine)",
+      "prompt_bn": "চাচার ইউরিক অ্যাসিড বেশি (কম পিউরিন ডায়েট মানতে হয়)।",
+      "members": [
+        {"name": "চাচা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_purine"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["gorur_bhuna", "shorshe_ilish", "lau_chingri", "murgir_pepe_jhol", "dim_bhuna", "lau_bhaji"],
+      "forbidden_recipe_keys": ["gorur_bhuna", "shorshe_ilish", "lau_chingri"],
+      "allowed_recipe_keys": ["murgir_pepe_jhol", "dim_bhuna", "lau_bhaji"],
+      "rationale": "Beef, hilsa, and prawn are high-purine ingredients."
+    },
+    {
+      "case_id": "M04",
+      "category": "multi_condition",
+      "title": "Combined CKD low potassium + Gout low purine",
+      "prompt_bn": "একজনের কিডনি রোগ (কম পটাশিয়াম) এবং আরেকজনের ইউরিক অ্যাসিড (কম পিউরিন)।",
+      "members": [
+        {"name": "বাবা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_potassium"], "medicines": []},
+        {"name": "চাচা", "role": "patient", "age_group": "adult", "allergies": [], "diet_presets": ["low_purine"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["pui_shak_kumra", "gorur_bhuna", "dudh_kola_madhu", "kalmi_shak_bhaji", "rui_lau_jhol", "murgir_jhol"],
+      "forbidden_recipe_keys": ["pui_shak_kumra", "gorur_bhuna", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["kalmi_shak_bhaji", "rui_lau_jhol", "murgir_jhol"],
+      "rationale": "pui_shak/mishti_kumra and banana are high potassium; beef is high purine."
+    },
+    {
+      "case_id": "M05",
+      "category": "multi_condition",
+      "title": "SPEC 9.7 Hossain household full profile",
+      "prompt_bn": "হোসেন পরিবার: বাবা কিডনি রোগী (কম পটাশিয়াম), মায়ের ডায়াবেটিস ও প্রেসার এবং আরিফের চিংড়ি অ্যালার্জি।",
+      "members": [
+        {"name": "বাবা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_potassium"], "medicines": []},
+        {"name": "মা", "role": "patient", "age_group": "adult", "allergies": [], "diet_presets": ["low_gi", "low_sodium"], "medicines": []},
+        {"name": "আরিফ", "role": "child", "age_group": "child", "allergies": ["prawn_shellfish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["palong_shak_bhaji", "lau_chingri", "alu_murgi_curry", "lau_masoor_dal", "murgir_jhol", "rui_lau_jhol"],
+      "forbidden_recipe_keys": ["palong_shak_bhaji", "lau_chingri", "alu_murgi_curry"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "rui_lau_jhol"],
+      "rationale": "Spinach (K), prawn (allergy), and alu_murgi (K+GI) are blocked; bottle gourd dal, chicken, and rui lau split cleanly."
+    },
+    {
+      "case_id": "M06",
+      "category": "multi_condition",
+      "title": "Infant under 1 year honey restriction",
+      "prompt_bn": "পরিবারে ১ বছরের নিচের একটি শিশু একসাথে নরম খাবার খাবে।",
+      "members": [
+        {"name": "বাবু", "role": "child", "age_group": "child_under_1", "allergies": [], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["dudh_kola_madhu", "pepe_moog_dal", "lau_masoor_dal", "murgir_pepe_jhol", "shosha_salad", "dim_bhuna"],
+      "forbidden_recipe_keys": ["dudh_kola_madhu"],
+      "allowed_recipe_keys": ["pepe_moog_dal", "lau_masoor_dal", "murgir_pepe_jhol", "shosha_salad", "dim_bhuna"],
+      "rationale": "Honey is contraindicated under age 1 (botulism safety rule)."
+    },
+    {
+      "case_id": "M07",
+      "category": "multi_condition",
+      "title": "Toddler under 5 whole-nuts choking hazard + low purine",
+      "prompt_bn": "পরিবারে ৪ বছরের শিশু এবং ইউরিক অ্যাসিড আক্রান্ত দাদা একসাথে খাচ্ছেন।",
+      "members": [
+        {"name": "আয়ান", "role": "child", "age_group": "child_under_5", "allergies": [], "diet_presets": [], "medicines": []},
+        {"name": "দাদা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_purine"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["badam_bhorta", "gorur_bhuna", "shorshe_ilish", "murgir_jhol", "mishti_shobji", "katla_begun_jhol"],
+      "forbidden_recipe_keys": ["badam_bhorta", "gorur_bhuna", "shorshe_ilish"],
+      "allowed_recipe_keys": ["murgir_jhol", "mishti_shobji", "katla_begun_jhol"],
+      "rationale": "Whole nuts/peanut dish blocked for under-5; beef and hilsa blocked for low_purine."
+    },
+    {
+      "case_id": "M08",
+      "category": "multi_condition",
+      "title": "Triple dietary preset elder (low_potassium + low_sodium + low_purine)",
+      "prompt_bn": "বয়স্ক দাদুর একসাথে কিডনি (কম পটাশিয়াম), প্রেসার (কম লবণ) এবং ইউরিক অ্যাসিডের (কম পিউরিন) নিয়ম মানতে হয়।",
+      "members": [
+        {"name": "দাদু", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_potassium", "low_sodium", "low_purine"], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["pui_shak_kumra", "lal_shak_bhaji", "gorur_bhuna", "alu_fulkopi_jhol", "kalmi_shak_bhaji", "koi_jhinge_jhol"],
+      "forbidden_recipe_keys": ["pui_shak_kumra", "lal_shak_bhaji", "gorur_bhuna", "alu_fulkopi_jhol"],
+      "allowed_recipe_keys": ["kalmi_shak_bhaji", "koi_jhinge_jhol"],
+      "rationale": "Only kalmi_shak_bhaji and koi_jhinge_jhol avoid high potassium, high purine, and support salt splitting."
+    },
+    {
+      "case_id": "M09",
+      "category": "multi_condition",
+      "title": "Diabetes + CKD + Fish Allergy",
+      "prompt_bn": "বাড়িতে ডায়াবেটিস (লো জিআই), কিডনি (কম পটাশিয়াম) এবং মাছ অ্যালার্জির সদস্য আছেন।",
+      "members": [
+        {"name": "মা", "role": "patient", "age_group": "adult", "allergies": [], "diet_presets": ["low_gi", "low_potassium"], "medicines": []},
+        {"name": "নুসরাত", "role": "other", "age_group": "adult", "allergies": ["fish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["alu_murgi_curry", "rui_macher_jhol", "dudh_kola_madhu", "dherosh_bhaji", "dim_begun_curry", "chola_dal_bhuna"],
+      "forbidden_recipe_keys": ["alu_murgi_curry", "rui_macher_jhol", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["dherosh_bhaji", "dim_begun_curry", "chola_dal_bhuna"],
+      "rationale": "Excludes potato/banana/honey (K+GI) and fish (allergy)."
+    },
+    {
+      "case_id": "M10",
+      "category": "multi_condition",
+      "title": "Constrained pot with only 1 safe option",
+      "prompt_bn": "পরিবারে কম পটাশিয়াম, কম পিউরিন, ডিম অ্যালার্জি ও মাছ অ্যালার্জি — সব একসাথে আছে।",
+      "members": [
+        {"name": "বাবা", "role": "elder", "age_group": "elder", "allergies": [], "diet_presets": ["low_potassium", "low_purine"], "medicines": []},
+        {"name": "সাদি", "role": "child", "age_group": "child", "allergies": ["egg", "fish"], "diet_presets": [], "medicines": []}
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["palong_shak_bhaji", "gorur_bhuna", "dim_bhuna", "rui_macher_jhol", "shorshe_ilish", "pepe_moog_dal"],
+      "forbidden_recipe_keys": ["palong_shak_bhaji", "gorur_bhuna", "dim_bhuna", "rui_macher_jhol", "shorshe_ilish"],
+      "allowed_recipe_keys": ["pepe_moog_dal"],
+      "rationale": "Only pepe_moog_dal satisfies every constraint; recommending extra blocked dishes is an error."
+    },
+    {
+      "case_id": "D01",
+      "category": "drug_food",
+      "title": "ACE inhibitor (Enalapril) high-potassium conflict",
+      "prompt_bn": "মায়ের নিশ্চিতকৃত ওষুধ Enalapril (ACE ইনহিবিটর) চলছে।",
+      "members": [
+        {
+          "name": "মা",
+          "role": "patient",
+          "age_group": "adult",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Enalapril", "drug_class": "ace_inhibitor", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["palong_shak_bhaji", "lal_shak_bhaji", "pui_shak_kumra", "kalmi_shak_bhaji", "lau_masoor_dal", "murgir_jhol"],
+      "forbidden_recipe_keys": ["palong_shak_bhaji", "lal_shak_bhaji", "pui_shak_kumra"],
+      "allowed_recipe_keys": ["kalmi_shak_bhaji", "lau_masoor_dal", "murgir_jhol"],
+      "rationale": "ACE inhibitors conflict with high-potassium leafy vegetables even without an explicit low_potassium diet preset."
+    },
+    {
+      "case_id": "D02",
+      "category": "drug_food",
+      "title": "ARB (Losartan) high-potassium conflict",
+      "prompt_bn": "বাবার নিশ্চিতকৃত ওষুধ Losartan (ARB শ্রেণির ওষুধ) চলছে।",
+      "members": [
+        {
+          "name": "বাবা",
+          "role": "patient",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Losartan", "drug_class": "arb", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["alu_murgi_curry", "alu_fulkopi_jhol", "dudh_kola_madhu", "murgir_jhol", "fulkopi_roast_curry", "potol_bhuna"],
+      "forbidden_recipe_keys": ["alu_murgi_curry", "alu_fulkopi_jhol", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["murgir_jhol", "fulkopi_roast_curry", "potol_bhuna"],
+      "rationale": "ARB class conflicts with high-potassium potato and banana dishes."
+    },
+    {
+      "case_id": "D03",
+      "category": "drug_food",
+      "title": "Potassium-sparing diuretic (Spironolactone) conflict",
+      "prompt_bn": "দাদির Spironolactone (পটাশিয়াম-স্পেয়ারিং ডাইইউরেটিক) ওষুধ চলছে।",
+      "members": [
+        {
+          "name": "দাদি",
+          "role": "elder",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Spironolactone", "drug_class": "k_sparing_diuretic", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["palong_shak_bhaji", "pui_shak_kumra", "dudh_kola_madhu", "jhinge_jhol", "chalkumra_moog_dal", "dim_badhakopi_bhaji"],
+      "forbidden_recipe_keys": ["palong_shak_bhaji", "pui_shak_kumra", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["jhinge_jhol", "chalkumra_moog_dal", "dim_badhakopi_bhaji"],
+      "rationale": "K-sparing diuretics block high-potassium spinach, Malabar spinach, and banana."
+    },
+    {
+      "case_id": "D04",
+      "category": "drug_food",
+      "title": "CYP3A4 Statin (Atorvastatin) pomelo/grapefruit interaction",
+      "prompt_bn": "মায়ের কোলেস্টেরলের জন্য Atorvastatin (CYP3A4 স্ট্যাটিন) ওষুধ নিশ্চিত করা আছে।",
+      "members": [
+        {
+          "name": "মা",
+          "role": "patient",
+          "age_group": "adult",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Atorvastatin", "drug_class": "statin_cyp3a4", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["jambura_bhorta", "shosha_salad", "badam_bhorta", "lau_masoor_dal", "murgir_jhol", "patla_masoor_dal"],
+      "forbidden_recipe_keys": ["jambura_bhorta"],
+      "allowed_recipe_keys": ["shosha_salad", "badam_bhorta", "lau_masoor_dal", "murgir_jhol", "patla_masoor_dal"],
+      "rationale": "jambura_bhorta uses grapefruit/pomelo (tag grapefruit_like) which conflicts with CYP3A4 statins."
+    },
+    {
+      "case_id": "D05",
+      "category": "drug_food",
+      "title": "Combined statin + ACE inhibitor household",
+      "prompt_bn": "বাবা রামিপ্রিল (ACE ইনহিবিটর) এবং মা সিমভাস্ট্যাটিন (CYP3A4 স্ট্যাটিন) খান।",
+      "members": [
+        {
+          "name": "বাবা",
+          "role": "elder",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Ramipril", "drug_class": "ace_inhibitor", "verified_by_caregiver": true, "active": true}]
+        },
+        {
+          "name": "মা",
+          "role": "patient",
+          "age_group": "adult",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Simvastatin", "drug_class": "statin_cyp3a4", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["jambura_bhorta", "palong_shak_bhaji", "lal_shak_bhaji", "kalmi_shak_bhaji", "begun_torkari", "rui_macher_jhol"],
+      "forbidden_recipe_keys": ["jambura_bhorta", "palong_shak_bhaji", "lal_shak_bhaji"],
+      "allowed_recipe_keys": ["kalmi_shak_bhaji", "begun_torkari", "rui_macher_jhol"],
+      "rationale": "Must satisfy both grapefruit interaction for Simvastatin and high-K avoidance for Ramipril."
+    },
+    {
+      "case_id": "D06",
+      "category": "drug_food",
+      "title": "ARB medication + Prawn allergy",
+      "prompt_bn": "পরিবারে একজন ARB ওষুধ Telmisartan খান এবং অন্যজনের চিংড়ি অ্যালার্জি আছে।",
+      "members": [
+        {
+          "name": "বাবা",
+          "role": "elder",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Telmisartan", "drug_class": "arb", "verified_by_caregiver": true, "active": true}]
+        },
+        {
+          "name": "আরিফ",
+          "role": "child",
+          "age_group": "child",
+          "allergies": ["prawn_shellfish"],
+          "diet_presets": [],
+          "medicines": []
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["pui_shak_kumra", "lau_chingri", "alu_fulkopi_jhol", "lau_bhaji", "murgir_pepe_jhol", "tilapia_potol_jhol"],
+      "forbidden_recipe_keys": ["pui_shak_kumra", "lau_chingri", "alu_fulkopi_jhol"],
+      "allowed_recipe_keys": ["lau_bhaji", "murgir_pepe_jhol", "tilapia_potol_jhol"],
+      "rationale": "ARB prohibits high-K pumpkin/potato dishes while Arif's allergy blocks lau_chingri."
+    },
+    {
+      "case_id": "D07",
+      "category": "drug_food",
+      "title": "Statin + Low sodium + Egg allergy",
+      "prompt_bn": "মা Atorvastatin খান ও কম লবণ নিয়ম মানেন, আর সন্তানের ডিম অ্যালার্জি।",
+      "members": [
+        {
+          "name": "মা",
+          "role": "patient",
+          "age_group": "adult",
+          "allergies": [],
+          "diet_presets": ["low_sodium"],
+          "medicines": [{"name_as_written": "Atorvastatin", "drug_class": "statin_cyp3a4", "verified_by_caregiver": true, "active": true}]
+        },
+        {
+          "name": "মাহি",
+          "role": "child",
+          "age_group": "child",
+          "allergies": ["egg"],
+          "diet_presets": [],
+          "medicines": []
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["jambura_bhorta", "dim_bhuna", "dim_begun_curry", "lau_masoor_dal", "shosha_salad", "pangas_pepe_jhol"],
+      "forbidden_recipe_keys": ["jambura_bhorta", "dim_bhuna", "dim_begun_curry"],
+      "allowed_recipe_keys": ["lau_masoor_dal", "shosha_salad", "pangas_pepe_jhol"],
+      "rationale": "Pomelo conflicts with statin; egg dishes trigger Mahi's allergy."
+    },
+    {
+      "case_id": "D08",
+      "category": "drug_food",
+      "title": "Unmapped active medicine triggers UNVERIFIED fail-safe exclusion",
+      "prompt_bn": "সদস্যের একটি সক্রিয় ওষুধ (Warfarin / অ-মডেলকৃত অজানা শ্রেণি) হারবারের নিয়ম-টেবিলে ম্যাপ করা নেই — অযাচাইকৃত হলে কোনো খাবার নিরাপদ হিসেবে প্রস্তাব করা যাবে না।",
+      "members": [
+        {
+          "name": "দাদা",
+          "role": "elder",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": [],
+          "medicines": [{"name_as_written": "Warfarin", "drug_class": null, "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "pepe_bhaji", "shosha_salad", "patla_masoor_dal"],
+      "forbidden_recipe_keys": ["lau_masoor_dal", "murgir_jhol", "pepe_bhaji", "shosha_salad", "patla_masoor_dal"],
+      "allowed_recipe_keys": [],
+      "rationale": "Fail-safe guardrail #4: unmapped drug_class must mark every recipe UNVERIFIED and recommend none."
+    },
+    {
+      "case_id": "D09",
+      "category": "drug_food",
+      "title": "none_modelled medicine (Metformin) + low_gi",
+      "prompt_bn": "মায়ের Metformin ওষুধ নিয়ম-টেবিলে 'none_modelled' হিসেবে যাচাইকৃত এবং ডায়াবেটিস (লো জিআই) প্রিসেট চালু আছে।",
+      "members": [
+        {
+          "name": "মা",
+          "role": "patient",
+          "age_group": "adult",
+          "allergies": [],
+          "diet_presets": ["low_gi"],
+          "medicines": [{"name_as_written": "Metformin", "drug_class": "none_modelled", "verified_by_caregiver": true, "active": true}]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["alu_murgi_curry", "alu_fulkopi_jhol", "dudh_kola_madhu", "korola_bhaji", "rui_macher_jhol", "jhinge_jhol"],
+      "forbidden_recipe_keys": ["alu_murgi_curry", "alu_fulkopi_jhol", "dudh_kola_madhu"],
+      "allowed_recipe_keys": ["korola_bhaji", "rui_macher_jhol", "jhinge_jhol"],
+      "rationale": "Verified none_modelled medicines do not block safe low_gi dishes, while potato and honey remain blocked by low_gi."
+    },
+    {
+      "case_id": "D10",
+      "category": "drug_food",
+      "title": "Tight combo: K-sparing diuretic + Statin + Low purine",
+      "prompt_bn": "দাদা Spironolactone ও Atorvastatin খান এবং ইউরিক অ্যাসিডের (কম পিউরিন) নিয়ম মানেন।",
+      "members": [
+        {
+          "name": "দাদা",
+          "role": "elder",
+          "age_group": "elder",
+          "allergies": [],
+          "diet_presets": ["low_purine"],
+          "medicines": [
+            {"name_as_written": "Spironolactone", "drug_class": "k_sparing_diuretic", "verified_by_caregiver": true, "active": true},
+            {"name_as_written": "Atorvastatin", "drug_class": "statin_cyp3a4", "verified_by_caregiver": true, "active": true}
+          ]
+        }
+      ],
+      "guests": [],
+      "candidate_recipe_keys": ["jambura_bhorta", "palong_shak_bhaji", "alu_murgi_curry", "gorur_bhuna", "shorshe_ilish", "murgir_pepe_jhol"],
+      "forbidden_recipe_keys": ["jambura_bhorta", "palong_shak_bhaji", "alu_murgi_curry", "gorur_bhuna", "shorshe_ilish"],
+      "allowed_recipe_keys": ["murgir_pepe_jhol"],
+      "rationale": "Only murgir_pepe_jhol avoids grapefruit, high potassium, and high purine."
+    }
+  ]
+}
+
