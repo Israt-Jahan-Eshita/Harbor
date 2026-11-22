@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "household": {
+    "name": "হোসেন পরিবার (ডেমো)",
+    "access_code": "DEMO26",
+    "pin": "1234",
+    "consent_given": true,
+    "monthly_budget_bdt": 14000,
+    "meal_times": {"breakfast": "08:00", "lunch": "13:30", "dinner": "21:00"}
+  },
+  "members": [
+    {
+      "name": "বাবা",
+      "role": "elder",
+      "age_group": "elder",
+      "conditions": ["ckd"],
+      "allergies": [],
+      "diet_presets": ["low_potassium"],
+      "medicines": []
+    },
+    {
+      "name": "মা",
+      "role": "patient",
+      "age_group": "adult",
+      "conditions": ["diabetes", "hypertension"],
+      "allergies": [],
+      "diet_presets": ["low_gi", "low_sodium"],
+      "medicines": [
+        {
+          "name_as_written": "Enalapril 5mg",
+          "generic_name": "enalapril",
+          "drug_class": "ace_inhibitor",
+          "timing": "after_food",
+          "meal_slots": ["dinner"],
+          "verified_by_caregiver": true,
+          "active": true
+        }
+      ]
+    },
+    {
+      "name": "আরিফ",
+      "role": "child",
+      "age_group": "child",
+      "conditions": [],
+      "allergies": ["prawn_shellfish"],
+      "diet_presets": [],
+      "medicines": []
+    },
+    {
+      "name": "সুমাইয়া (কেয়ারগিভার)",
+      "role": "caregiver",
+      "age_group": "adult",
+      "conditions": [],
+      "allergies": [],
+      "diet_presets": [],
+      "medicines": []
+    }
+  ],
+  "initial_stock": [
+    {"ingredient_key": "lau", "qty_base": 1200},
+    {"ingredient_key": "masoor_dal", "qty_base": 1000},
+    {"ingredient_key": "rui_fish", "qty_base": 800},
+    {"ingredient_key": "jhinge", "qty_base": 600},
+    {"ingredient_key": "kancha_pepe", "qty_base": 700},
+    {"ingredient_key": "tomato", "qty_base": 500},
+    {"ingredient_key": "onion", "qty_base": 1000},
+    {"ingredient_key": "garlic", "qty_base": 300},
+    {"ingredient_key": "turmeric", "qty_base": 200},
+    {"ingredient_key": "salt", "qty_base": 500},
+    {"ingredient_key": "green_chilli", "qty_base": 150},
+    {"ingredient_key": "oil", "qty_base": 1000},
+    {"ingredient_key": "egg", "qty_base": 8},
+    {"ingredient_key": "chicken", "qty_base": 1000}
+  ]
+}

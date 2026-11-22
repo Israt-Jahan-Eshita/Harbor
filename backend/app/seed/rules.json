@@ -1,0 +1,48 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "rules": [
+    {
+      "rule_id": "ACE_INHIBITOR_HIGH_POTASSIUM",
+      "drug_class": "ace_inhibitor",
+      "ingredient_attr": "potassium_level",
+      "attr_value": "high",
+      "severity": "block",
+      "message_bn": "ACE ইনহিবিটর ওষুধের সাথে অতিরিক্ত পটাশিয়ামযুক্ত খাবার নিরাপদ নয়।",
+      "message_en": "High-potassium foods can conflict with ACE inhibitor medicines.",
+      "source_note": "SPEC section 9.2 prototype rule (needs pharmacist review before real use)"
+    },
+    {
+      "rule_id": "ARB_HIGH_POTASSIUM",
+      "drug_class": "arb",
+      "ingredient_attr": "potassium_level",
+      "attr_value": "high",
+      "severity": "block",
+      "message_bn": "ARB ওষুধের সাথে অতিরিক্ত পটাশিয়ামযুক্ত খাবার নিরাপদ নয়।",
+      "message_en": "High-potassium foods can conflict with ARB medicines.",
+      "source_note": "SPEC section 9.2 prototype rule (needs pharmacist review before real use)"
+    },
+    {
+      "rule_id": "K_SPARING_DIURETIC_HIGH_POTASSIUM",
+      "drug_class": "k_sparing_diuretic",
+      "ingredient_attr": "potassium_level",
+      "attr_value": "high",
+      "severity": "block",
+      "message_bn": "পটাশিয়াম-স্পেয়ারিং ডাইইউরেটিক ওষুধের সাথে বেশি পটাশিয়ামযুক্ত খাবার নিরাপদ নয়।",
+      "message_en": "High-potassium foods can conflict with potassium-sparing diuretics.",
+      "source_note": "SPEC section 9.2 prototype rule (needs pharmacist review before real use)"
+    },
+    {
+      "rule_id": "STATIN_GRAPEFRUIT",
+      "drug_class": "statin_cyp3a4",
+      "ingredient_attr": "tag",
+      "attr_value": "grapefruit_like",
+      "severity": "block",
+      "message_bn": "এই স্ট্যাটিন ওষুধের সাথে জাম্বুরা বা গ্রেপফ্রুট-জাতীয় ফল নিরাপদ নয়।",
+      "message_en": "Grapefruit or pomelo (jambura) can interact with CYP3A4-metabolized statins.",
+      "source_note": "SPEC section 9.2 prototype rule (needs pharmacist review before real use)"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "groups": {
+    "vegetable_gourd": ["lau", "jhinge", "kancha_pepe", "chalkumra", "potol", "begun", "badhakopi", "fulkopi", "mula", "shosha"],
+    "leafy_greens": ["kalmi_shak", "palong_shak", "lal_shak", "pui_shak"],
+    "fish_protein": ["pangas_fish", "tilapia", "koi_fish", "rui_fish", "katla_fish", "hilsha_fish"],
+    "meat_protein": ["chicken", "beef"],
+    "dal_lentils": ["masoor_dal", "moog_dal", "chola_dal"],
+    "cooking_oil": ["oil", "mustard_oil"]
+  }
+}

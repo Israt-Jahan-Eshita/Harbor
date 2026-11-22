@@ -1,0 +1,1086 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "recipes": [
+    {
+      "key": "lau_masoor_dal",
+      "name_bn": "লাউ দিয়ে মসুর ডাল",
+      "name_en": "Bottle Gourd Red Lentil Dal",
+      "servings_base": 4,
+      "category": "dal",
+      "ingredients": [
+        {"ingredient_key": "lau", "qty": 300, "unit": "g"},
+        {"ingredient_key": "masoor_dal", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মসুর ডাল ধুয়ে লাউ ও হলুদ দিয়ে সেদ্ধ করুন।",
+        "তেলে পেঁয়াজ ও রসুন ভেজে বাগার দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি ডালে লবণ ও কাঁচামরিচ দিয়ে ২ মিনিট ফুটিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.85,
+      "est_cost_bdt": 50
+    },
+    {
+      "key": "patla_masoor_dal",
+      "name_bn": "পাতলা মসুর ডাল",
+      "name_en": "Thin Red Lentil Soup",
+      "servings_base": 4,
+      "category": "dal",
+      "ingredients": [
+        {"ingredient_key": "masoor_dal", "qty": 150, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 12, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 15, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ডাল ভালো করে ধুয়ে হলুদ ও পানি দিয়ে সেদ্ধ করুন।",
+        "তেলে রসুন ও পেঁয়াজ ভেজে বাগার দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে নির্ধারিত অংশ আলাদা করুন।",
+        "বাকি ডালে লবণ ও কাঁচামরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.78,
+      "est_cost_bdt": 35
+    },
+    {
+      "key": "pepe_moog_dal",
+      "name_bn": "কাঁচা পেঁপে দিয়ে মুগ ডাল",
+      "name_en": "Raw Papaya Mung Dal",
+      "servings_base": 4,
+      "category": "dal",
+      "ingredients": [
+        {"ingredient_key": "kancha_pepe", "qty": 250, "unit": "g"},
+        {"ingredient_key": "moog_dal", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মুগ ডাল হালকা ভেজে ধুয়ে পেঁপে, হলুদ, আদা ও জিরা দিয়ে সেদ্ধ করুন।",
+        "তেলে পেঁয়াজ ও রসুন ভেজে বাগার দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি ডালে লবণ ও কাঁচামরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.80,
+      "est_cost_bdt": 50
+    },
+    {
+      "key": "chalkumra_moog_dal",
+      "name_bn": "চালকুমড়া দিয়ে মুগ ডাল",
+      "name_en": "Ash Gourd Mung Dal",
+      "servings_base": 4,
+      "category": "dal",
+      "ingredients": [
+        {"ingredient_key": "chalkumra", "qty": 300, "unit": "g"},
+        {"ingredient_key": "moog_dal", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ভাজা মুগ ডালের সাথে চালকুমড়া ও হলুদ দিয়ে সেদ্ধ করুন।",
+        "তেলে পেঁয়াজ, রসুন ও জিরা ফোড়ন দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি অংশে লবণ ও মরিচ দিয়ে নেড়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.77,
+      "est_cost_bdt": 52
+    },
+    {
+      "key": "chola_dal_bhuna",
+      "name_bn": "ছোলার ডাল ভুনা",
+      "name_en": "Spiced Chickpea Lentils",
+      "servings_base": 4,
+      "category": "dal",
+      "ingredients": [
+        {"ingredient_key": "chola_dal", "qty": 180, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 60, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 12, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ছোলার ডাল ভিজিয়ে রেখে হলুদ দিয়ে সেদ্ধ করুন।",
+        "কড়াইতে তেল, পেঁয়াজ, আদা, রসুন ও জিরা কষিয়ে ডাল দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ডালে লবণ ও কাঁচামরিচ মিশিয়ে ভুনা করুন।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.76,
+      "est_cost_bdt": 45
+    },
+    {
+      "key": "mishti_shobji",
+      "name_bn": "নিরামিষ মিশ্র সবজি",
+      "name_en": "Light Mixed Gourd & Papaya Curry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "lau", "qty": 200, "unit": "g"},
+        {"ingredient_key": "jhinge", "qty": 200, "unit": "g"},
+        {"ingredient_key": "kancha_pepe", "qty": 150, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "লাউ, ঝিঙে ও পেঁপে কিউব করে কেটে নিন।",
+        "তেলে পেঁয়াজ, রসুন ও হলুদ নেড়ে সবজি ঢেকে রান্না করুন।",
+        "সবজি নরম হলে লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি সবজিতে লবণ ও কাঁচামরিচ দিয়ে ২ মিনিট রান্না করে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.82,
+      "est_cost_bdt": 48
+    },
+    {
+      "key": "lau_bhaji",
+      "name_bn": "লাউ ভাজি",
+      "name_en": "Stir-fried Bottle Gourd",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "lau", "qty": 450, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "kalojira", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে কালোজিরা, পেঁয়াজ ও রসুন ফোড়ন দিন।",
+        "কুচানো লাউ ও হলুদ দিয়ে ঢেকে সেদ্ধ করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ভাজিতে লবণ ও মরিচ দিয়ে ভাজা হলে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.74,
+      "est_cost_bdt": 40
+    },
+    {
+      "key": "jhinge_jhol",
+      "name_bn": "ঝিঙের পাতলা ঝোল",
+      "name_en": "Light Ridge Gourd Curry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "jhinge", "qty": 400, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 18, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে পেঁয়াজ, রসুন, হলুদ ও জিরা কষান।",
+        "ঝিঙে ও সামান্য পানি দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও কাঁচামরিচ দিয়ে ফুটিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.72,
+      "est_cost_bdt": 42
+    },
+    {
+      "key": "pepe_bhaji",
+      "name_bn": "কাঁচা পেঁপে ভাজি",
+      "name_en": "Stir-fried Raw Papaya",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "kancha_pepe", "qty": 400, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "পেঁপে ঝুরি করে কেটে ধুয়ে নিন।",
+        "তেলে পেঁয়াজ, রসুন ও হলুদ নেড়ে পেঁপে ঢেকে সেদ্ধ করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ভাজিতে লবণ ও কাঁচামরিচ দিয়ে ভাজুন।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.71,
+      "est_cost_bdt": 35
+    },
+    {
+      "key": "potol_bhuna",
+      "name_bn": "পটল ভুনা",
+      "name_en": "Braised Pointed Gourd",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "potol", "qty": 400, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "পটল হালকা ভেজে তুলে রাখুন।",
+        "একই তেলে পেঁয়াজ, আদা, রসুন, হলুদ ও জিরা কষিয়ে পটল দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি অংশে লবণ ও মরিচ দিয়ে মাখা মাখা করে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.79,
+      "est_cost_bdt": 48
+    },
+    {
+      "key": "begun_torkari",
+      "name_bn": "টমেটো দিয়ে বেগুনের তরকারি",
+      "name_en": "Eggplant Tomato Curry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "begun", "qty": 350, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে পেঁয়াজ, রসুন, হলুদ, জিরা ও টমেটো কষান।",
+        "টুকরা করা বেগুন দিয়ে ঢেকে নরম হওয়া পর্যন্ত রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও কাঁচামরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.78,
+      "est_cost_bdt": 55
+    },
+    {
+      "key": "korola_bhaji",
+      "name_bn": "করলা ভাজি",
+      "name_en": "Stir-fried Bitter Gourd",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "korola", "qty": 350, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 70, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "করলা পাতলা করে কেটে নিন।",
+        "তেলে পেঁয়াজ, হলুদ ও করলা দিয়ে মাঝারি আঁচে ভাজুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ভাজিতে লবণ ও কাঁচামরিচ দিয়ে ভাজা হলে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.72,
+      "est_cost_bdt": 45
+    },
+    {
+      "key": "dherosh_bhaji",
+      "name_bn": "ঢেঁড়স ভাজি",
+      "name_en": "Stir-fried Okra",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "dherosh", "qty": 350, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ঢেঁড়স ধুয়ে শুকিয়ে কেটে নিন।",
+        "তেলে পেঁয়াজ, রসুন, হলুদ ও ঢেঁড়স দিয়ে ভাজুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি ভাজিতে লবণ ও কাঁচামরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.75,
+      "est_cost_bdt": 40
+    },
+    {
+      "key": "badhakopi_bhaji",
+      "name_bn": "বাঁধাকপি ভাজি",
+      "name_en": "Stir-fried Cabbage",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "badhakopi", "qty": 450, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 80, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে পেঁয়াজ, রসুন ও জিরা ফোড়ন দিয়ে কুচানো বাঁধাকপি, টমেটো ও হলুদ দিন।",
+        "ঢেকে সেদ্ধ করে পানি শুকিয়ে নিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ভাজিতে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.76,
+      "est_cost_bdt": 44
+    },
+    {
+      "key": "fulkopi_roast_curry",
+      "name_bn": "ফুলকপির রসা",
+      "name_en": "Cauliflower Tomato Curry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "fulkopi", "qty": 450, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 100, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ফুলকপি মাঝারি টুকরা করে হালকা ভাপিয়ে নিন।",
+        "মশলা ও টমেটো কষিয়ে ফুলকপি দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ দিয়ে মাখা হলে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.81,
+      "est_cost_bdt": 52
+    },
+    {
+      "key": "gajor_sheem_torkari",
+      "name_bn": "গাজর ও শিমের তরকারি",
+      "name_en": "Carrot and Bean Stir-fry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "gajor", "qty": 200, "unit": "g"},
+        {"ingredient_key": "sheem", "qty": 250, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "গাজর ও শিম কেটে ধুয়ে নিন।",
+        "তেলে পেঁয়াজ, রসুন, হলুদ ও জিরা দিয়ে সবজি ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি অংশে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.77,
+      "est_cost_bdt": 52
+    },
+    {
+      "key": "palong_shak_bhaji",
+      "name_bn": "পালং শাক ভাজি",
+      "name_en": "Stir-fried Spinach",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "palong_shak", "qty": 500, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 15, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "পালং শাক ভালো করে ধুয়ে কেটে নিন।",
+        "তেলে রসুন ও পেঁয়াজ ভেজে শাক ও হলুদ দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি শাকে লবণ ও কাঁচামরিচ দিয়ে পানি শুকিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.80,
+      "est_cost_bdt": 42
+    },
+    {
+      "key": "kalmi_shak_bhaji",
+      "name_bn": "কলমি শাক ভাজি",
+      "name_en": "Stir-fried Water Spinach",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "kalmi_shak", "qty": 450, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 15, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 20, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "কলমি শাক বেছে ধুয়ে কেটে নিন।",
+        "তেলে রসুন ও পেঁয়াজ ফোড়ন দিয়ে শাক নেড়ে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি শাকে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.76,
+      "est_cost_bdt": 34
+    },
+    {
+      "key": "lal_shak_bhaji",
+      "name_bn": "লাল শাক ভাজি",
+      "name_en": "Stir-fried Red Amaranth",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "lal_shak", "qty": 450, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 12, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 18, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "লাল শাক ভালো করে ধুয়ে কেটে নিন।",
+        "তেলে রসুন ও পেঁয়াজ ভেজে শাক দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি শাকে লবণ ও মরিচ দিয়ে নেড়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.78,
+      "est_cost_bdt": 35
+    },
+    {
+      "key": "pui_shak_kumra",
+      "name_bn": "পুঁই শাক ও মিষ্টি কুমড়া",
+      "name_en": "Malabar Spinach with Sweet Pumpkin",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "pui_shak", "qty": 350, "unit": "g"},
+        {"ingredient_key": "mishti_kumra", "qty": 200, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "পুঁই শাকের ডাঁটা ও মিষ্টি কুমড়া কেটে নিন।",
+        "তেলে পেঁয়াজ, রসুন ও হলুদ কষিয়ে শাক-কুমড়া ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি অংশে লবণ ও মরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.79,
+      "est_cost_bdt": 40
+    },
+    {
+      "key": "alu_fulkopi_jhol",
+      "name_bn": "আলু-ফুলকপির ঝোল",
+      "name_en": "Potato and Cauliflower Curry",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "potato", "qty": 250, "unit": "g"},
+        {"ingredient_key": "fulkopi", "qty": 300, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 100, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "আলু ও ফুলকপি কেটে হালকা ভেজে নিন।",
+        "মশলা ও টমেটো কষিয়ে সবজি ও পানি দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ঝোলে লবণ ও মরিচ দিয়ে ফুটিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.83,
+      "est_cost_bdt": 56
+    },
+    {
+      "key": "shosha_salad",
+      "name_bn": "শসা-টমেটো সালাদ",
+      "name_en": "Fresh Cucumber Tomato Salad",
+      "servings_base": 4,
+      "category": "vegetable",
+      "ingredients": [
+        {"ingredient_key": "shosha", "qty": 300, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 150, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "coriander", "qty": 15, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 5, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 4, "unit": "g"},
+        {"ingredient_key": "mustard_oil", "qty": 10, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "শসা, টমেটো, পেঁয়াজ ও ধনেপাতা কুচি করে মিশিয়ে নিন।",
+        "লবণ ও কাঁচামরিচ মেশানোর আগে আলাদা বাটিতে অংশ তুলে রাখুন।",
+        "বাকি সালাদে লবণ, মরিচ ও সরিষার তেল মেখে পরিবেশন করুন।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ মেশানোর আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.73,
+      "est_cost_bdt": 45
+    },
+    {
+      "key": "rui_macher_jhol",
+      "name_bn": "রুই মাছের ঝোল",
+      "name_en": "Rui Fish Curry with Tomato",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "rui_fish", "qty": 400, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 60, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 12, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 30, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "রুই মাছ হলুদ মাখিয়ে হালকা ভেজে রাখুন।",
+        "পেঁয়াজ, আদা, রসুন, জিরা ও টমেটো কষিয়ে ঝোলের পানি দিন।",
+        "মাছ দিয়ে ৫ মিনিট ফোটানোর পর লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ঝোলে লবণ ও কাঁচামরিচ দিয়ে ২ মিনিট পর নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.88,
+      "est_cost_bdt": 185
+    },
+    {
+      "key": "rui_lau_jhol",
+      "name_bn": "লাউ দিয়ে রুই মাছ",
+      "name_en": "Rui Fish with Bottle Gourd",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "rui_fish", "qty": 350, "unit": "g"},
+        {"ingredient_key": "lau", "qty": 350, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মাছ হালকা ভেজে তুলে রাখুন।",
+        "মশলা কষিয়ে লাউ সেদ্ধ হলে মাছ ও ঝোল দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ঝোলে লবণ ও মরিচ দিয়ে ফুটিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.84,
+      "est_cost_bdt": 170
+    },
+    {
+      "key": "katla_begun_jhol",
+      "name_bn": "বেগুন দিয়ে কাতলা মাছ",
+      "name_en": "Katla Fish with Eggplant",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "katla_fish", "qty": 400, "unit": "g"},
+        {"ingredient_key": "begun", "qty": 250, "unit": "g"},
+        {"ingredient_key": "tomato", "qty": 100, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 30, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "কাতলা মাছ ও বেগুন হালকা ভেজে রাখুন।",
+        "মশলা ও টমেটো কষিয়ে মাছ ও বেগুন দিয়ে ঝোল করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.84,
+      "est_cost_bdt": 205
+    },
+    {
+      "key": "tilapia_potol_jhol",
+      "name_bn": "পটল দিয়ে তেলাপিয়া মাছ",
+      "name_en": "Tilapia Curry with Pointed Gourd",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "tilapia", "qty": 400, "unit": "g"},
+        {"ingredient_key": "potol", "qty": 250, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলাপিয়া মাছ হালকা ভেজে রাখুন।",
+        "পটল ও মশলা কষিয়ে পানি ও মাছ দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.77,
+      "est_cost_bdt": 130
+    },
+    {
+      "key": "pangas_pepe_jhol",
+      "name_bn": "কাঁচা পেঁপে দিয়ে পাঙাশ মাছ",
+      "name_en": "Pangas Fish with Raw Papaya",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "pangas_fish", "qty": 400, "unit": "g"},
+        {"ingredient_key": "kancha_pepe", "qty": 250, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 12, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মাছ পরিষ্কার করে হলুদ মাখিয়ে হালকা ভাজুন।",
+        "পেঁয়াজ, আদা, রসুন, জিরা কষিয়ে পেঁপে ও মাছ দিয়ে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.74,
+      "est_cost_bdt": 115
+    },
+    {
+      "key": "koi_jhinge_jhol",
+      "name_bn": "ঝিঙে দিয়ে কৈ মাছ",
+      "name_en": "Koi Fish with Ridge Gourd",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "koi_fish", "qty": 350, "unit": "g"},
+        {"ingredient_key": "jhinge", "qty": 300, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 24, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "কৈ মাছ হালকা ভেজে নিন।",
+        "মশলা কষিয়ে ঝিঙে ও মাছ দিয়ে ঝোল করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি অংশে লবণ ও মরিচ দিয়ে ফুটিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.80,
+      "est_cost_bdt": 150
+    },
+    {
+      "key": "shorshe_ilish",
+      "name_bn": "হলুদ-মরিচের ইলিশ ঝোল",
+      "name_en": "Light Mustard Oil Hilsa Curry",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "hilsha_fish", "qty": 400, "unit": "g"},
+        {"ingredient_key": "mustard_oil", "qty": 30, "unit": "ml"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 12, "unit": "g"}
+      ],
+      "steps_bn": [
+        "সরিষার তেলে পেঁয়াজ ও হলুদ কষিয়ে পানি দিন।",
+        "ইলিশ মাছ দিয়ে ঢেকে ১০ মিনিট রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি মাছে লবণ ও কাঁচামরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.92,
+      "est_cost_bdt": 580
+    },
+    {
+      "key": "lau_chingri",
+      "name_bn": "লাউ চিংড়ি",
+      "name_en": "Bottle Gourd with Prawn",
+      "servings_base": 4,
+      "category": "fish",
+      "ingredients": [
+        {"ingredient_key": "lau", "qty": 400, "unit": "g"},
+        {"ingredient_key": "chingri", "qty": 150, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে পেঁয়াজ, রসুন, হলুদ ও চিংড়ি মাছ কষান।",
+        "কুচানো লাউ দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.87,
+      "est_cost_bdt": 150
+    },
+    {
+      "key": "murgir_jhol",
+      "name_bn": "মুরগির মাংসের পাতলা ঝোল",
+      "name_en": "Light Chicken Curry",
+      "servings_base": 4,
+      "category": "chicken",
+      "ingredients": [
+        {"ingredient_key": "chicken", "qty": 500, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 80, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 15, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 15, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 5, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 7, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 30, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "পেঁয়াজ, আদা, রসুন, হলুদ ও জিরা কষিয়ে মুরগির মাংস দিন।",
+        "ভালো করে কষিয়ে ঝোলের পানি দিয়ে ঢেকে সেদ্ধ করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ঝোলে লবণ ও কাঁচামরিচ দিয়ে ২ মিনিট পর নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.86,
+      "est_cost_bdt": 135
+    },
+    {
+      "key": "murgir_pepe_jhol",
+      "name_bn": "কাঁচা পেঁপে দিয়ে মুরগির ঝোল",
+      "name_en": "Chicken Curry with Raw Papaya",
+      "servings_base": 4,
+      "category": "chicken",
+      "ingredients": [
+        {"ingredient_key": "chicken", "qty": 400, "unit": "g"},
+        {"ingredient_key": "kancha_pepe", "qty": 250, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 70, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 15, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 12, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 4, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 7, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মশলা কষিয়ে মুরগির মাংস ও পেঁপে একসাথে কষান।",
+        "পানি দিয়ে ঢেকে সেদ্ধ করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ঝোলে লবণ ও মরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.83,
+      "est_cost_bdt": 125
+    },
+    {
+      "key": "alu_murgi_curry",
+      "name_bn": "আলু দিয়ে মুরগির মাংস",
+      "name_en": "Chicken and Potato Curry",
+      "servings_base": 4,
+      "category": "chicken",
+      "ingredients": [
+        {"ingredient_key": "chicken", "qty": 450, "unit": "g"},
+        {"ingredient_key": "potato", "qty": 200, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 80, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 15, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 15, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 5, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 7, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 30, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "আলু ও মুরগি মশলায় কষিয়ে পানি দিয়ে ঢেকে রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.89,
+      "est_cost_bdt": 140
+    },
+    {
+      "key": "gorur_bhuna",
+      "name_bn": "গরুর মাংস ভুনা",
+      "name_en": "Spiced Beef Bhuna",
+      "servings_base": 4,
+      "category": "meat",
+      "ingredients": [
+        {"ingredient_key": "beef", "qty": 500, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 100, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 20, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 20, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 4, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 6, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 7, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 10, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 35, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "মশলা দিয়ে মাংস ভালোভাবে কষিয়ে নরম হওয়া পর্যন্ত রান্না করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে রাখুন।",
+        "বাকি মাংসে লবণ ও মরিচ মিশিয়ে ভুনা করে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.88,
+      "est_cost_bdt": 420
+    },
+    {
+      "key": "dim_bhuna",
+      "name_bn": "ডিম ভুনা",
+      "name_en": "Egg Tomato Bhuna",
+      "servings_base": 4,
+      "category": "egg",
+      "ingredients": [
+        {"ingredient_key": "egg", "qty": 4, "unit": "piece"},
+        {"ingredient_key": "tomato", "qty": 120, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 70, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "ginger", "qty": 8, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "ডিম সেদ্ধ করে খোসা ছাড়িয়ে হালকা ভেজে রাখুন।",
+        "পেঁয়াজ, আদা, রসুন, জিরা ও টমেটো কষিয়ে ডিম ও সামান্য পানি দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ডিম ভুনায় লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.84,
+      "est_cost_bdt": 85
+    },
+    {
+      "key": "dim_begun_curry",
+      "name_bn": "বেগুন দিয়ে ডিমের ঝোল",
+      "name_en": "Egg and Eggplant Curry",
+      "servings_base": 4,
+      "category": "egg",
+      "ingredients": [
+        {"ingredient_key": "egg", "qty": 4, "unit": "piece"},
+        {"ingredient_key": "begun", "qty": 250, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 50, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 3, "unit": "g"},
+        {"ingredient_key": "cumin", "qty": 3, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 6, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 25, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "সেদ্ধ ডিম ও বেগুন হালকা ভেজে রাখুন।",
+        "মশলা কষিয়ে বেগুন, ডিম ও ঝোলের পানি দিন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি তরকারিতে লবণ ও মরিচ দিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.78,
+      "est_cost_bdt": 95
+    },
+    {
+      "key": "dim_badhakopi_bhaji",
+      "name_bn": "ডিম দিয়ে বাঁধাকপি ভাজি",
+      "name_en": "Cabbage Stir-fry with Egg",
+      "servings_base": 4,
+      "category": "egg",
+      "ingredients": [
+        {"ingredient_key": "egg", "qty": 2, "unit": "piece"},
+        {"ingredient_key": "badhakopi", "qty": 400, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 45, "unit": "g"},
+        {"ingredient_key": "turmeric", "qty": 2, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "oil", "qty": 22, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "তেলে পেঁয়াজ ও ডিম ঝুরি করে ভেজে বাঁধাকপি ও হলুদ দিন।",
+        "নরম হলে লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ তুলে নিন।",
+        "বাকি ভাজিতে লবণ ও মরিচ মিশিয়ে নামান।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ দেওয়ার আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.79,
+      "est_cost_bdt": 65
+    },
+    {
+      "key": "jambura_bhorta",
+      "name_bn": "জাম্বুরা মাখা",
+      "name_en": "Spiced Pomelo Salad",
+      "servings_base": 4,
+      "category": "snack",
+      "ingredients": [
+        {"ingredient_key": "grapefruit", "qty": 1, "unit": "piece"},
+        {"ingredient_key": "green_chilli", "qty": 6, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 4, "unit": "g"},
+        {"ingredient_key": "mustard_oil", "qty": 8, "unit": "ml"},
+        {"ingredient_key": "coriander", "qty": 10, "unit": "g"}
+      ],
+      "steps_bn": [
+        "জাম্বুরা ছাড়িয়ে কোয়া আলাদা করুন।",
+        "লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা অংশ সরিয়ে রাখুন।",
+        "বাকি অংশে লবণ, কাঁচামরিচ ও ধনেপাতা মেখে পরিবেশন করুন।"
+      ],
+      "split_step_bn": "লবণ ও কাঁচামরিচ মেশানোর আগে",
+      "split_removes": ["salt", "green_chilli"],
+      "taste_score": 0.75,
+      "est_cost_bdt": 60
+    },
+    {
+      "key": "dudh_kola_madhu",
+      "name_bn": "দুধ কলা ও মধু",
+      "name_en": "Milk Banana with Honey",
+      "servings_base": 4,
+      "category": "snack",
+      "ingredients": [
+        {"ingredient_key": "milk", "qty": 500, "unit": "ml"},
+        {"ingredient_key": "banana", "qty": 4, "unit": "piece"},
+        {"ingredient_key": "honey", "qty": 30, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "দুধ জ্বাল দিয়ে ঠান্ডা করুন।",
+        "কলা চটকে দুধ ও মধু মিশিয়ে পরিবেশন করুন।"
+      ],
+      "split_step_bn": null,
+      "split_removes": [],
+      "taste_score": 0.74,
+      "est_cost_bdt": 105
+    },
+    {
+      "key": "badam_bhorta",
+      "name_bn": "চিনাবাদাম ভর্তা",
+      "name_en": "Crushed Peanut Bhorta",
+      "servings_base": 4,
+      "category": "snack",
+      "ingredients": [
+        {"ingredient_key": "peanut", "qty": 150, "unit": "g"},
+        {"ingredient_key": "onion", "qty": 40, "unit": "g"},
+        {"ingredient_key": "garlic", "qty": 10, "unit": "g"},
+        {"ingredient_key": "green_chilli", "qty": 8, "unit": "g"},
+        {"ingredient_key": "salt", "qty": 5, "unit": "g"},
+        {"ingredient_key": "mustard_oil", "qty": 12, "unit": "ml"}
+      ],
+      "steps_bn": [
+        "চিনাবাদাম ও রসুন শুকনো তাওয়ায় ভেজে নিন।",
+        "পেঁয়াজ, কাঁচামরিচ, লবণ ও সরিষার তেল দিয়ে একসাথে বেটে নিন।"
+      ],
+      "split_step_bn": null,
+      "split_removes": [],
+      "taste_score": 0.80,
+      "est_cost_bdt": 50
+    }
+  ]
+}

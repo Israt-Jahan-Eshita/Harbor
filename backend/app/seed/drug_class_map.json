@@ -1,0 +1,13 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "classes": {
+    "ace_inhibitor": ["enalapril", "lisinopril", "ramipril", "perindopril", "captopril"],
+    "arb": ["losartan", "telmisartan", "valsartan", "olmesartan", "candesartan"],
+    "k_sparing_diuretic": ["spironolactone", "eplerenone", "amiloride", "triamterene"],
+    "statin_cyp3a4": ["simvastatin", "atorvastatin", "lovastatin"],
+    "none_modelled": []
+  }
+}

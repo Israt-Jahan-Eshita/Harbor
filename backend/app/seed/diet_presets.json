@@ -1,0 +1,46 @@
+{
+  "_meta": {
+    "disclaimer": "Prototype data compiled from general nutrition guidance and pharmacology references. Not clinically reviewed.",
+    "version": "0.1"
+  },
+  "presets": [
+    {
+      "preset": "low_gi",
+      "attr": "gi_level",
+      "max_level": "medium",
+      "split_allowed": false
+    },
+    {
+      "preset": "low_sodium",
+      "attr": "sodium_level",
+      "max_level": "medium",
+      "split_allowed": true
+    },
+    {
+      "preset": "low_purine",
+      "attr": "purine_level",
+      "max_level": "medium",
+      "split_allowed": false
+    },
+    {
+      "preset": "low_potassium",
+      "attr": "potassium_level",
+      "max_level": "medium",
+      "split_allowed": false
+    }
+  ],
+  "age_profiles": [
+    {
+      "age_group": "child_under_1",
+      "blocked_tag": "honey",
+      "rule_id": "CHILD_UNDER_1_HONEY",
+      "message_bn": "১ বছরের নিচের শিশুর জন্য মধু দেওয়া যাবে না।"
+    },
+    {
+      "age_group": "child_under_5",
+      "blocked_tag": "whole_nuts",
+      "rule_id": "CHILD_UNDER_5_WHOLE_NUTS",
+      "message_bn": "৫ বছরের নিচের শিশুর জন্য আস্ত বাদাম নিরাপদ নয়।"
+    }
+  ]
+}
