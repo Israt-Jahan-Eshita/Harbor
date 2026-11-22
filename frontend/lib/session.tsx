@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useContext,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 /**
@@ -23,16 +23,52 @@ export interface HarborSession {
 }
 
 const STORAGE_KEY = "harbor_session";
+const listeners = new Set<() => void>();
+let cachedRaw: string | null | undefined;
+let cachedSession: HarborSession | null = null;
 
-function loadInitialSession(): HarborSession | null {
+function notifyListeners() {
+  listeners.forEach((fn) => fn());
+}
+
+function subscribe(callback: () => void): () => void {
+  listeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === STORAGE_KEY) {
+      cachedRaw = undefined;
+      callback();
+    }
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    listeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
+}
+
+function getSnapshot(): HarborSession | null {
   if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as HarborSession;
-  } catch {
+  const raw = window.localStorage.getItem(STORAGE_KEY);
+  if (raw === cachedRaw) return cachedSession;
+  cachedRaw = raw;
+  if (!raw) {
+    cachedSession = null;
     return null;
   }
+  try {
+    cachedSession = JSON.parse(raw) as HarborSession;
+  } catch {
+    cachedSession = null;
+  }
+  return cachedSession;
+}
+
+function getServerSnapshot(): HarborSession | null {
+  return null;
 }
 
 export interface SessionContextValue {
@@ -45,34 +81,34 @@ export interface SessionContextValue {
 const SessionContext = createContext<SessionContextValue | null>(null);
 
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSessionState] = useState<HarborSession | null>(() =>
-    loadInitialSession(),
-  );
+  const session = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const setSession = useCallback((next: HarborSession | null) => {
-    setSessionState(next);
     if (typeof window !== "undefined") {
       if (next) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        const serialized = JSON.stringify(next);
+        cachedRaw = serialized;
+        cachedSession = next;
+        window.localStorage.setItem(STORAGE_KEY, serialized);
       } else {
+        cachedRaw = null;
+        cachedSession = null;
         window.localStorage.removeItem(STORAGE_KEY);
       }
+      notifyListeners();
     }
   }, []);
 
-  const updateMealTimes = useCallback(
-    (mealTimes: HarborSession["mealTimes"]) => {
-      setSessionState((prev) => {
-        if (!prev) return prev;
-        const updated = { ...prev, mealTimes };
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-        }
-        return updated;
-      });
-    },
-    [],
-  );
+  const updateMealTimes = useCallback((mealTimes: HarborSession["mealTimes"]) => {
+    const current = getSnapshot();
+    if (!current || typeof window === "undefined") return;
+    const updated: HarborSession = { ...current, mealTimes };
+    const serialized = JSON.stringify(updated);
+    cachedRaw = serialized;
+    cachedSession = updated;
+    window.localStorage.setItem(STORAGE_KEY, serialized);
+    notifyListeners();
+  }, []);
 
   const clearSession = useCallback(() => {
     setSession(null);
@@ -93,4 +129,3 @@ export function useSession(): SessionContextValue {
   }
   return ctx;
 }
-

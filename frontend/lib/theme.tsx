@@ -6,18 +6,62 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type ResolvedTheme = "light" | "dark";
 
 const STORAGE_KEY = "harbor_theme";
+const themeListeners = new Set<() => void>();
 
-function getSystemTheme(): ResolvedTheme {
+function notifyThemeListeners() {
+  themeListeners.forEach((fn) => fn());
+}
+
+function subscribeTheme(callback: () => void): () => void {
+  themeListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === STORAGE_KEY) callback();
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    themeListeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
+}
+
+function getThemeSnapshot(): ThemeMode {
+  if (typeof window === "undefined") return "light";
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+  return saved === "light" || saved === "dark" || saved === "system" ? saved : "light";
+}
+
+function getServerThemeSnapshot(): ThemeMode {
+  return "light";
+}
+
+function subscribeSystemTheme(callback: () => void): () => void {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return () => {};
+  }
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function getSystemThemeSnapshot(): ResolvedTheme {
   if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
+  return "light";
+}
+
+function getServerSystemThemeSnapshot(): ResolvedTheme {
   return "light";
 }
 
@@ -31,46 +75,38 @@ export interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
-    if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "light" || saved === "dark" || saved === "system") {
-        return saved;
-      }
-    }
-    return "light";
-  });
-
-  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(() => getSystemTheme());
-
-  useEffect(() => {
-    if (typeof window.matchMedia !== "function") return;
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const listener = (e: MediaQueryListEvent) => {
-      setSystemTheme(e.matches ? "dark" : "light");
-    };
-    mq.addEventListener("change", listener);
-    return () => mq.removeEventListener("change", listener);
-  }, []);
+  const themeMode = useSyncExternalStore(
+    subscribeTheme,
+    getThemeSnapshot,
+    getServerThemeSnapshot,
+  );
+  const systemTheme = useSyncExternalStore(
+    subscribeSystemTheme,
+    getSystemThemeSnapshot,
+    getServerSystemThemeSnapshot,
+  );
 
   const resolvedTheme: ResolvedTheme =
     themeMode === "system" ? systemTheme : themeMode;
 
   useEffect(() => {
     document.documentElement.dataset.theme = resolvedTheme;
-    window.localStorage.setItem(STORAGE_KEY, themeMode);
-  }, [resolvedTheme, themeMode]);
+  }, [resolvedTheme]);
 
   const setThemeMode = useCallback((mode: ThemeMode) => {
-    setThemeModeState(mode);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, mode);
+      const nextResolved = mode === "system" ? getSystemThemeSnapshot() : mode;
+      document.documentElement.dataset.theme = nextResolved;
+      notifyThemeListeners();
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeModeState((prev) => {
-      const effective = prev === "system" ? systemTheme : prev;
-      return effective === "light" ? "dark" : "light";
-    });
-  }, [systemTheme]);
+    const current = getThemeSnapshot();
+    const effective = current === "system" ? getSystemThemeSnapshot() : current;
+    setThemeMode(effective === "light" ? "dark" : "light");
+  }, [setThemeMode]);
 
   const value = useMemo<ThemeContextValue>(
     () => ({ themeMode, resolvedTheme, setThemeMode, toggleTheme }),
@@ -87,4 +123,3 @@ export function useTheme(): ThemeContextValue {
   }
   return ctx;
 }
-

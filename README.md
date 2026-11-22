@@ -128,13 +128,18 @@ Open `http://localhost:3000`. Use `/welcome` to create a household or sign in wi
 
 ```powershell
 cd backend
-# Pure deterministic + mocked contract + PostgreSQL integration suite
+# Pure deterministic + mocked contract + PostgreSQL + audit integration suite
 pytest tests -v
+
+# Audit checks only (12 dynamic checks, edge cases, hallucination & latency benchmark)
+pytest tests/audit -v -s
 
 # Include live Groq & Gemini smoke verification (requires API keys in backend/.env)
 $env:HARBOR_LIVE_TESTS = '1'
 pytest tests -v
 ```
+
+> **Windows IPv6 / Localhost Note:** Windows commonly resolves `localhost` to IPv6 `::1`. When running browser E2E checks against `http://localhost:3000`, launch the API with dual-stack/IPv6 binding: `uvicorn app.main:app --host :: --port 8000`.
 
 ### Frontend
 
@@ -143,6 +148,7 @@ cd frontend
 npm test
 npm run lint
 npm run build
+npx playwright test --reporter=list
 ```
 
 > **Windows Build Note:** `package.json` configures `"build": "next build --webpack"` for reliable Next.js `16.4.6` production compilation on Windows.

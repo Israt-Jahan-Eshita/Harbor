@@ -6,7 +6,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import type { Locale } from "@/lib/api";
 import bnMessages from "@/messages/bn.json";
@@ -21,6 +21,38 @@ const CATALOG: Record<Locale, Messages> = {
   bn: bnMessages,
   en: enMessages,
 };
+
+const localeListeners = new Set<() => void>();
+
+function notifyLocaleListeners() {
+  localeListeners.forEach((fn) => fn());
+}
+
+function subscribeLocale(callback: () => void): () => void {
+  localeListeners.add(callback);
+  const onStorage = (e: StorageEvent) => {
+    if (!e.key || e.key === STORAGE_KEY) callback();
+  };
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", onStorage);
+  }
+  return () => {
+    localeListeners.delete(callback);
+    if (typeof window !== "undefined") {
+      window.removeEventListener("storage", onStorage);
+    }
+  };
+}
+
+function getLocaleSnapshot(): Locale {
+  if (typeof window === "undefined") return "bn";
+  const saved = window.localStorage.getItem(STORAGE_KEY);
+  return saved === "en" || saved === "bn" ? saved : "bn";
+}
+
+function getServerLocaleSnapshot(): Locale {
+  return "bn";
+}
 
 export function toBanglaDigits(input: string | number): string {
   return String(input).replace(/[0-9]/g, (d) => BANGLA_DIGITS[Number(d)] ?? d);
@@ -52,7 +84,6 @@ export function translateKey(
     }
   }
   if (typeof current !== "string") {
-    // Fallback to English, then raw key
     let fallback: unknown = CATALOG.en;
     for (const part of parts) {
       if (fallback && typeof fallback === "object" && part in fallback) {
@@ -88,28 +119,28 @@ export interface I18nContextValue {
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window !== "undefined") {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "bn" || saved === "en") {
-        return saved;
-      }
-    }
-    return "bn";
-  });
+  const locale = useSyncExternalStore(
+    subscribeLocale,
+    getLocaleSnapshot,
+    getServerLocaleSnapshot,
+  );
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    window.localStorage.setItem(STORAGE_KEY, locale);
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(STORAGE_KEY, next);
+      document.documentElement.lang = next;
+      notifyLocaleListeners();
+    }
   }, []);
 
   const toggleLocale = useCallback(() => {
-    setLocaleState((prev) => (prev === "bn" ? "en" : "bn"));
-  }, []);
+    const next: Locale = getLocaleSnapshot() === "bn" ? "en" : "bn";
+    setLocale(next);
+  }, [setLocale]);
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>) =>
@@ -147,4 +178,3 @@ export function useI18n(): I18nContextValue {
   }
   return ctx;
 }
-
