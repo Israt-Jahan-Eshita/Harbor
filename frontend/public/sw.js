@@ -28,12 +28,14 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
+  if (req.cache === "only-if-cached" && req.mode !== "same-origin") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Network-first with cache fallback for same-origin pages/assets (including /patient/[token] shell)
+  // Network-first with retry and exact-route cache fallback (never serve '/' HTML for another route)
   event.respondWith(
     fetch(req)
+      .catch(() => fetch(req.url))
       .then((resp) => {
         if (resp && resp.ok && (req.mode === "navigate" || url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons"))) {
           const copy = resp.clone();
@@ -44,10 +46,6 @@ self.addEventListener("fetch", (event) => {
       .catch(async () => {
         const cached = await caches.match(req);
         if (cached) return cached;
-        if (req.mode === "navigate") {
-          const fallback = await caches.match("/");
-          if (fallback) return fallback;
-        }
         return new Response("Offline", { status: 503, statusText: "Offline" });
       }),
   );

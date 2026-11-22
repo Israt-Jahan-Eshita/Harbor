@@ -462,7 +462,11 @@
     "statusLabel": "Benchmark Status",
     "availableLabel": "Measured Results Available",
     "rawSummaryTitle": "Measured Summary Metrics",
-    "markdownTitle": "Full Evaluation Report"
+    "markdownTitle": "Full Evaluation Report",
+    "caveatsTitle": "Methodology & Honesty Caveats",
+    "caveatsItem1": "Benchmark cases (eval/cases.json) were authored by the coding agent and labelled from the seed rule table (ingredients, drug-food rules, and diet presets) — not an external human clinician.",
+    "caveatsItem2": "Harbor's 0.0% unsafe rate holds by construction against the same seed rule table (verifying deterministic rule adherence, not independent clinical validation).",
+    "caveatsItem3": "In Baseline Run 1 (eval/results.json, 90 runs, max_tokens=500), the plain model scored 0/30 unsafe on allergy cases (A01-A10), while 27 runs failed due to reasoning-token truncation (json_validate_failed) and a Groq 200k TPD 429 rate limit on D10. A subsequent re-run attempt (eval/results_run2_INVALID.json) hit HTTP 429 on 26/30 cases and is excluded as unusable."
   },
   "howItWorks": {
     "title": "How Harbor Keeps Families Safe",

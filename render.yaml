@@ -1,0 +1,52 @@
+services:
+  - type: web
+    name: harbor-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: ENV
+        value: prod
+      - key: TZ
+        value: Asia/Dhaka
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: LLM_MODEL
+        value: openai/gpt-oss-120b
+      - key: STT_MODEL
+        value: whisper-large-v3
+      - key: VISION_MODEL
+        value: gemini-3.5-flash
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: TICK_SECRET
+        generateValue: true
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        value: mailto:caregiver@example.com
+
+  - type: web
+    name: harbor-web
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        sync: false
+

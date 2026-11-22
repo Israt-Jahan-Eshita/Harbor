@@ -285,10 +285,11 @@ export default function MemberDetailPage() {
           <div className="grid gap-3 sm:grid-cols-3">
             <Input label={t("members.nameLabel")} value={name} onChange={(e) => setName(e.target.value)} required />
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-detail-role" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("members.roleLabel")}
               </label>
               <select
+                id="member-detail-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as MemberRole)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -300,10 +301,11 @@ export default function MemberDetailPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-detail-age" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("members.ageGroupLabel")}
               </label>
               <select
+                id="member-detail-age"
                 value={ageGroup}
                 onChange={(e) => setAgeGroup(e.target.value as AgeGroup)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -451,10 +453,11 @@ export default function MemberDetailPage() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-detail-med-class" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("memberDetail.drugClassLabel")}
               </label>
               <select
+                id="member-detail-med-class"
                 value={medClass}
                 onChange={(e) => setMedClass(e.target.value as DrugClass)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -468,10 +471,11 @@ export default function MemberDetailPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-detail-med-timing" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("memberDetail.timingLabel")}
               </label>
               <select
+                id="member-detail-med-timing"
                 value={medTiming}
                 onChange={(e) => setMedTiming(e.target.value as MedTiming)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"

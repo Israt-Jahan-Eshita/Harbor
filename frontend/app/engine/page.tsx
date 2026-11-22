@@ -130,10 +130,11 @@ export default function EngineExplorerPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {mode === "member" && catalog.members.length > 0 ? (
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+                <label htmlFor="engine-member-select" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                   {t("engine.memberSelectLabel")}
                 </label>
                 <select
+                  id="engine-member-select"
                   value={selectedMemberId}
                   onChange={(e) => setSelectedMemberId(e.target.value)}
                   className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -156,10 +157,11 @@ export default function EngineExplorerPage() {
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="engine-recipe-select" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("engine.recipeSelectLabel")}
               </label>
               <select
+                id="engine-recipe-select"
                 value={selectedRecipeKey}
                 onChange={(e) => setSelectedRecipeKey(e.target.value)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -178,10 +180,11 @@ export default function EngineExplorerPage() {
           {mode === "custom" && (
             <div className="space-y-4 pt-2 border-t border-[var(--border-subtle)]">
               <div className="space-y-1.5">
-                <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+                <label htmlFor="engine-custom-age-select" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                   {t("engine.customAgeLabel")}
                 </label>
                 <select
+                  id="engine-custom-age-select"
                   value={customAge}
                   onChange={(e) => setCustomAge(e.target.value as AgeGroup)}
                   className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -330,7 +333,7 @@ export default function EngineExplorerPage() {
             </ol>
           </div>
 
-          <div className="space-y-2 overflow-x-auto">
+          <div tabIndex={0} className="space-y-2 overflow-x-auto">
             <h3 className="text-sm font-bold" style={{ color: "var(--text)" }}>
               {t("engine.ingredientsTitle")}
             </h3>

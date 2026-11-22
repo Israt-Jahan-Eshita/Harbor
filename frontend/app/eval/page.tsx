@@ -89,9 +89,22 @@ export default function EvalPage() {
             {data.results && (
               <Card variant="raised" className="space-y-2">
                 <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>
+                  {t("eval.caveatsTitle")}
+                </h3>
+                <ul className="list-disc pl-5 space-y-1.5 text-sm leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  <li>{t("eval.caveatsItem1")}</li>
+                  <li>{t("eval.caveatsItem2")}</li>
+                  <li>{t("eval.caveatsItem3")}</li>
+                </ul>
+              </Card>
+            )}
+
+            {data.results && (
+              <Card variant="raised" className="space-y-2">
+                <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>
                   {t("eval.rawSummaryTitle")}
                 </h3>
-                <pre className="neu-inset p-4 overflow-x-auto text-xs font-mono" style={{ color: "var(--text)" }}>
+                <pre tabIndex={0} className="neu-inset p-4 overflow-x-auto text-xs font-mono" style={{ color: "var(--text)" }}>
                   {JSON.stringify(data.results, null, 2)}
                 </pre>
               </Card>
@@ -102,7 +115,7 @@ export default function EvalPage() {
                 <h3 className="text-base font-bold" style={{ color: "var(--text)" }}>
                   {t("eval.markdownTitle")}
                 </h3>
-                <pre className="neu-inset p-4 overflow-x-auto text-xs font-mono whitespace-pre-wrap" style={{ color: "var(--text)" }}>
+                <pre tabIndex={0} className="neu-inset p-4 overflow-x-auto text-xs font-mono whitespace-pre-wrap" style={{ color: "var(--text)" }}>
                   {data.markdown}
                 </pre>
               </Card>

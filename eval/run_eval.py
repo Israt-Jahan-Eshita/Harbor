@@ -196,11 +196,19 @@ def aggregate_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
             "unsafe_recommendation_rate": 0.0,
             "rule_citation_rate": 0.0,
             "valid_json_rate": 0.0,
+            "error_count": 0,
+            "rate_limit_429_count": 0,
         }
     unsafe_cnt = sum(1 for r in records if r["unsafe"])
     cite_cnt = sum(1 for r in records if r["has_citation"])
     valid_json_cnt = sum(1 for r in records if r.get("valid_json", True))
     missed_cnt = sum(1 for r in records if r["missed_opportunity"])
+    err_cnt = sum(1 for r in records if r.get("error"))
+    rl_429_cnt = sum(
+        1
+        for r in records
+        if "429" in str(r.get("error") or "") or "rate_limit" in str(r.get("error") or "").lower()
+    )
     return {
         "total_runs": total,
         "unsafe_recommendation_count": unsafe_cnt,
@@ -209,6 +217,8 @@ def aggregate_metrics(records: list[dict[str, Any]]) -> dict[str, Any]:
         "rule_citation_count": cite_cnt,
         "rule_citation_rate": round(cite_cnt / total, 4),
         "valid_json_rate": round(valid_json_cnt / total, 4),
+        "error_count": err_cnt,
+        "rate_limit_429_count": rl_429_cnt,
     }
 
 
@@ -226,9 +236,15 @@ def format_markdown_report(summary: dict[str, Any]) -> str:
         "# Harbor 30-Case Safety Benchmark Results",
         "",
         f"- **Generated (UTC):** `{summary['generated_at']}`",
-        f"- **Benchmark Cases:** `{summary['case_count']}` (10 `allergy`, 10 `multi_condition`, 10 `drug_food` — human-authored)",
-        f"- **Baseline Model:** `{summary['baseline_model']}` (plain JSON prompt, no core rules or MCP tools, `{summary['runs_per_case']}` runs/case)",
+        f"- **Benchmark Cases:** `{summary['case_count']}` (10 `allergy`, 10 `multi_condition`, 10 `drug_food` — agent-authored, labelled from the seed rule table)",
+        f"- **Baseline Model:** `{summary['baseline_model']}` (plain JSON prompt, no core rules or MCP tools, `{summary['runs_per_case']}` runs/case, `max_tokens={summary.get('baseline_max_tokens', 2048)}`)",
         f"- **Harbor Engine:** Pure-Python deterministic rules (`check_dish_safe`, `find_shared_pot_dishes`) + template grounding",
+        "",
+        "## Method & Honesty Caveats",
+        "",
+        "- **Label Source:** `eval/cases.json` was authored by the coding agent and labelled from the seed rule table (`ingredients.json`, `rules.json`, `diet_presets.json`), not an external human clinician.",
+        "- **By-Construction Caveat:** Because both the benchmark labels and `core/` evaluate the same seed rule table, Harbor's `0.0%` unsafe rate proves deterministic rule adherence rather than independent clinical accuracy.",
+        "- **Run 1 Config Caveat (`eval/results.json`):** Run 1 (`2026-11-22T18:33:15Z`, 90 runs) used `max_tokens=500`, where `openai/gpt-oss-120b` exhausted its budget on reasoning tokens (`27` failed runs / `63/90` [`70.0%`] valid JSON, including Groq 200k TPD `429` on `D10` runs 2-3), while scoring `0/30` unsafe on allergy cases. A later re-run attempt (`eval/results_run2_INVALID.json`) hit HTTP `429` daily token limits on `26/30` cases and is marked invalid/not usable.",
         "",
         "## Overall Comparison",
         "",
@@ -273,6 +289,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Run Harbor 30-case safety benchmark.")
     parser.add_argument("--runs", type=int, default=3, help="Number of plain LLM runs per case")
     parser.add_argument("--harbor-only", action="store_true", help="Only evaluate Harbor core deterministically")
+    parser.add_argument("--out-json", type=str, default="results.json", help="Output JSON filename in eval/")
+    parser.add_argument("--out-md", type=str, default="results.md", help="Output Markdown filename in eval/")
     args = parser.parse_args()
 
     cases_doc = json.loads((EVAL_DIR / "cases.json").read_text("utf-8"))
@@ -293,6 +311,7 @@ def main() -> int:
     harbor_records: list[dict[str, Any]] = []
     baseline_records: list[dict[str, Any]] = []
     per_case_out: list[dict[str, Any]] = []
+    aborted_on_429 = False
 
     for c_idx, case in enumerate(cases, start=1):
         h_res = run_harbor_case(case, ctx, recipes_by_key)
@@ -307,7 +326,7 @@ def main() -> int:
         harbor_records.append(harbor_rec)
 
         b_runs: list[dict[str, Any]] = []
-        if not args.harbor_only and client is not None:
+        if not args.harbor_only and client is not None and not aborted_on_429:
             for r_i in range(1, args.runs + 1):
                 b_raw = run_plain_groq_case(
                     client=client,
@@ -325,11 +344,20 @@ def main() -> int:
                 }
                 b_runs.append(rec)
                 baseline_records.append(rec)
+                err_str = str(b_raw.get("error") or "")
                 print(
                     f"[{c_idx:02d}/{len(cases)} run {r_i}/{args.runs}] {case['case_id']} -> "
-                    f"recs={b_raw['recommended_keys']} unsafe={b_eval['unsafe']} err={b_raw['error']}"
+                    f"recs={b_raw['recommended_keys']} unsafe={b_eval['unsafe']} err={b_raw['error']}",
+                    flush=True,
                 )
-                time.sleep(0.35)
+                if "429" in err_str or "rate_limit" in err_str.lower():
+                    print(
+                        "ABORTING BASELINE: HTTP 429 rate limit reached after retry backoff. Result is not usable.",
+                        flush=True,
+                    )
+                    aborted_on_429 = True
+                    break
+                time.sleep(0.05)
 
         per_case_out.append(
             {
@@ -348,6 +376,7 @@ def main() -> int:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "case_count": len(cases),
         "runs_per_case": 0 if args.harbor_only else args.runs,
+        "baseline_max_tokens": 2048,
         "baseline_model": settings.llm_model,
         "harbor": {
             "overall": aggregate_metrics(harbor_records),
@@ -370,12 +399,32 @@ def main() -> int:
         print("Harbor-only dry run:", json.dumps(summary["harbor"], ensure_ascii=False, indent=2))
         return 0
 
-    (EVAL_DIR / "results.json").write_text(
+    b_overall = summary["baseline"]["overall"]
+    if aborted_on_429 or b_overall.get("rate_limit_429_count", 0) > 0:
+        summary["note"] = (
+            f"{b_overall.get('rate_limit_429_count', 0)}/{b_overall.get('total_runs', 0)} runs failed with HTTP 429 "
+            "(daily token limit), result not usable"
+        )
+        invalid_out = EVAL_DIR / "results_run2_INVALID.json"
+        invalid_out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(
+            f"BENCHMARK ABORTED / INVALID (HTTP 429): wrote {invalid_out.name}; did NOT overwrite {args.out_json}.",
+            flush=True,
+        )
+        return 2
+
+    (EVAL_DIR / args.out_json).write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    (EVAL_DIR / "results.md").write_text(format_markdown_report(summary), encoding="utf-8")
-    print("Benchmark finished cleanly! Harbor:", summary["harbor"]["overall"])
-    print("Baseline:", summary["baseline"]["overall"])
+    (EVAL_DIR / args.out_md).write_text(format_markdown_report(summary), encoding="utf-8")
+    if b_overall.get("error_count", 0) > 0:
+        print(
+            f"Benchmark completed with {b_overall['error_count']} baseline error(s). Baseline: {b_overall}",
+            flush=True,
+        )
+    else:
+        print("Benchmark finished cleanly! Harbor:", summary["harbor"]["overall"], flush=True)
+        print("Baseline:", b_overall, flush=True)
     return 0
 
 

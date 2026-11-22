@@ -155,6 +155,32 @@ npx playwright test --reporter=list
 
 ---
 
+## Evaluation Methodology & Caveats
+
+The 30-case safety benchmark (`eval/cases.json`, `eval/baseline.py`, `eval/run_eval.py`) compares plain `openai/gpt-oss-120b` JSON prompting (3 runs per case, no deterministic rules or MCP tools) against Harbor's deterministic core (`check_dish_safe`, `find_shared_pot_dishes`, and template grounding).
+
+1. **Label Provenance:** The 30 benchmark cases (`10` allergy, `10` multi-condition/age, `10` drug-food/fail-safe) were authored by the coding agent and labelled directly from the seed rule table (`backend/app/seed/{ingredients,rules,diet_presets}.json`), not by an external human clinician.
+2. **By-Construction Determinism:** Because the benchmark ground-truth labels and Harbor's rule engine derive from the same seed rule table, Harbor's `0.0% (0/30)` unsafe recommendation rate holds by construction and verifies deterministic implementation fidelity rather than external clinical sensitivity.
+3. **Baseline Run Caveats:** In Run 1 (`eval/results_run1.json`, `max_tokens=500`), the plain model achieved `0.0% (0/30)` unsafe recommendations on the 10 allergy cases (`A01`-`A10`), `3.3% (1/30)` on multi-condition (`M07`), and `6.7% (2/30)` on drug-food (`D05`, `D06`), while `27/90` baseline calls failed (`70.0%` valid JSON) because `max_tokens=500` truncated `openai/gpt-oss-120b` internal reasoning tokens (`json_validate_failed`) and the final case (`D10` runs 2-3) hit Groq's 200,000 TPD free-tier rate limit (`HTTP 429`).
+
+---
+
+## Differences from the Submitted Proposal
+
+Every architectural or operational adjustment between the initial proposal / build plan (`HARBOR_BUILD_PLAN.md`) and the built codebase is documented below and verified against the source tree:
+
+| Proposal / Initial Plan Item | Built Implementation | Code Location & Rationale |
+| :--- | :--- | :--- |
+| **Local SQLite option** ("Local dev may use SQLite") | **PostgreSQL everywhere** (`harbor_dev`, `harbor_test`, Supabase pooler in prod); SQLite connection strings are explicitly rejected at startup | `backend/app/config.py` (`validate_postgres_url`), `backend/app/models.py` (uses PostgreSQL `ARRAY`, `JSONB`, `UUID`) |
+| **In-process APScheduler** ("APScheduler may still be used locally") | **Idempotent HTTP Tick endpoint only** (`POST /internal/tick` with `X-Tick-Secret` header and `?now=` override); zero in-process background scheduler threads | `backend/app/api/internal.py`, `backend/app/core/reminders.py` (`evaluate_tick`) — ensures identical behavior on sleeping free-tier Render instances |
+| **Gemini 2.5 Flash vision model** | **Default `VISION_MODEL=gemini-3.5-flash`** (configurable via env) | `backend/app/config.py` — `gemini-2.5-flash` returned HTTP `404 NOT_FOUND` for new API accounts (`ISSUE-007`) |
+| **Single-language Bangla UI** | **Full bilingual `বাংলা ↔ English` UI & data conversion** across all 17 routes, rule traces, fallback templates, and unit labels | `frontend/lib/i18n.tsx`, `frontend/messages/{bn,en}.json`, `backend/app/core/templates.py` |
+| **Next.js default `next build` (Turbopack)** | **`next build --webpack`** configured in `frontend/package.json` | `frontend/package.json` — avoids Windows Turbopack PostCSS child-process crash (`ISSUE-006`) |
+| **`/today` daily menu route** | **Canonical route `/menu`** with `/today` redirecting cleanly to `/menu` | `frontend/app/menu/page.tsx`, `frontend/app/today/page.tsx` (`router.replace("/menu")`, `ISSUE-005`) |
+| **18 database tables** | **19 database tables** (added dedicated `push_subscriptions` table alongside `alerts` and `llm_calls`) | `backend/app/models.py`, `backend/alembic/versions/d1eaa253e60e_initial_schema.py` |
+
+---
+
 ## Disclaimer
 
 Harbor is an engineering prototype built to demonstrate deterministic multi-constraint family meal planning, grounded LLM output validation, and caregiver-in-the-loop safety gating. Seed nutrition, allergen, and drug-food rules have **not** undergone clinical pharmacist or dietitian review and must not be used for medical decision making without qualified clinical validation.

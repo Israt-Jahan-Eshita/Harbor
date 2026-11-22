@@ -1,8 +1,8 @@
 {
   "_meta": {
     "version": "1.0",
-    "author": "human_authored",
-    "description": "30 human-labelled safety benchmark cases (10 allergy, 10 multi_condition, 10 drug_food) built independently from engine outputs."
+    "author": "agent_authored",
+    "description": "30 agent-authored safety benchmark cases (10 allergy, 10 multi_condition, 10 drug_food) labelled from the seed rule table."
   },
   "cases": [
     {

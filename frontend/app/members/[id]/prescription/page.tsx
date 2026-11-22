@@ -228,10 +228,11 @@ export default function PrescriptionUploadPage() {
         <Card variant="raised">
           <form onSubmit={handleExtract} className="space-y-4">
             <div className="space-y-2">
-              <label className="block text-sm font-bold" style={{ color: "var(--text)" }}>
+              <label htmlFor="rx-file-upload" className="block text-sm font-bold" style={{ color: "var(--text)" }}>
                 {t("prescription.fileLabel")}
               </label>
               <input
+                id="rx-file-upload"
                 type="file"
                 accept="image/*"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
@@ -342,10 +343,11 @@ export default function PrescriptionUploadPage() {
 
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+                    <label htmlFor={`rx-row-class-${idx}`} className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                       {t("prescription.colClass")}
                     </label>
                     <select
+                      id={`rx-row-class-${idx}`}
                       value={row.drug_class}
                       onChange={(e) => updateRow(idx, { drug_class: e.target.value as DrugClass })}
                       className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -360,10 +362,11 @@ export default function PrescriptionUploadPage() {
                     </select>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+                    <label htmlFor={`rx-row-timing-${idx}`} className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                       {t("prescription.colTiming")}
                     </label>
                     <select
+                      id={`rx-row-timing-${idx}`}
                       value={row.timing}
                       onChange={(e) => updateRow(idx, { timing: e.target.value as MedTiming })}
                       className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"

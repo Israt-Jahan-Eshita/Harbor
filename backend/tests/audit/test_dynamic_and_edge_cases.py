@@ -247,6 +247,21 @@ def test_12_dynamic_behavior_checks(client: TestClient, db_session: Session) -> 
         eng_new = client.post("/engine/check", headers=headers, json={"member_id": mem_id, "recipe_key": new_key})
         assert eng_new.status_code == 200
         assert eng_new.json()["status"] == "SAFE_DIRECT"
+        print(
+            "\nDYNAMIC_12_EVIDENCE:\n"
+            f"  1. Prawn allergy on lau_chingri: before={before_1['status']} -> during={during_1['status']}({during_1['reasons']}) -> after={after_1['status']}\n"
+            f"  2. Confirmed ACEi Enalapril on palong_shak_bhaji: active={during_2['status']}({during_2['reasons']}) -> unconfirmed={after_2['status']}\n"
+            f"  3. Diet preset [] -> ['low_sodium'] on lau_masoor_dal: before={before_3['status']} -> after={after_3['status']}\n"
+            f"  4. Guests +3 with fish restriction via /menu/review: people={menu_before_4['people_count']}->{menu_after_4['people_count']}, rui_macher_jhol_excluded={'rui_macher_jhol' in excl_keys_4}\n"
+            f"  5. Voice/text event 2kg potol purchased: potol_qty_base={stock_before_5['potol']}->{stock_after_5['potol']}\n"
+            f"  6. Dish marked COOKED repeat penalty on lau_masoor_dal: fresh_score={fresh_scores['lau_masoor_dal'].score} -> repeat_score={repeat_scores['lau_masoor_dal'].score}\n"
+            f"  7. Month shift Nov(11)->Jun(6) on fulkopi_roast_curry: nov_season={nov_scores['fulkopi_roast_curry'].components['season_bonus']} -> jun_season={jun_scores['fulkopi_roast_curry'].components['season_bonus']}\n"
+            f"  8. Oil price observation logged: source={ref_est.source}({ref_est.price_bdt}) -> {user_est.source}({user_est.price_bdt})\n"
+            f"  9. Dinner mealtime 21:00->22:00 shift: due_at={sched_21[0].due_at.isoformat()} -> {sched_22[0].due_at.isoformat()}\n"
+            f" 10. Tick now={after_dinner_window.isoformat()} override: caregiver_escalations_sent={tick_res.json()['caregiver_escalations_sent']}\n"
+            f" 11. Score weight override (taste vs repeat): top_taste={top_t} -> top_with_repeat_penalty={top_rep}\n"
+            f" 12. New DB recipe row '{new_key}' inserted without code change: status={eng_new.json()['status']}"
+        )
     finally:
         db_session.delete(db_rec)
         db_session.commit()

@@ -210,10 +210,11 @@ export default function StyleguidePage() {
       </Card>
 
       {/* Live WCAG Contrast Audit Table */}
-      <Card variant="raised" className="space-y-3 overflow-x-auto">
+      <Card variant="raised" className="space-y-3">
         <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
           {t("styleguide.contrastTitle")} ({resolvedTheme})
         </h2>
+        <div tabIndex={0} className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead>
             <tr style={{ color: "var(--text-muted)" }}>
@@ -245,6 +246,7 @@ export default function StyleguidePage() {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
 
       <Sheet open={sheetOpen} onClose={() => setSheetOpen(false)} title={t("styleguide.sheetTitle")}>

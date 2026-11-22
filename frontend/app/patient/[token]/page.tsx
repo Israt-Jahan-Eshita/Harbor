@@ -125,7 +125,7 @@ export default function PatientReminderPage() {
           type="button"
           onClick={toggleLocale}
           data-testid="patient-lang-toggle"
-          aria-label={t("common.languageLabel")}
+          title={t("common.languageLabel")}
           className="neu-raised-sm inline-flex min-h-[48px] items-center gap-1.5 px-3.5 py-2 text-sm font-bold cursor-pointer"
           style={{ color: "var(--text)" }}
         >

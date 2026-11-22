@@ -94,7 +94,7 @@ def run_plain_groq_case(
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.3,
-                max_tokens=500,
+                max_tokens=2048,
                 response_format={"type": "json_object"},
                 timeout=35.0,
             )

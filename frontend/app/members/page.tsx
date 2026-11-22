@@ -305,10 +305,11 @@ export default function MembersPage() {
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-create-role" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("members.roleLabel")}
               </label>
               <select
+                id="member-create-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value as MemberRole)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"
@@ -322,10 +323,11 @@ export default function MembersPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              <label htmlFor="member-create-age" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
                 {t("members.ageGroupLabel")}
               </label>
               <select
+                id="member-create-age"
                 value={ageGroup}
                 onChange={(e) => setAgeGroup(e.target.value as AgeGroup)}
                 className="neu-inset w-full min-h-[48px] px-3 py-2 text-sm"

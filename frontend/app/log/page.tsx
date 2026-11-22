@@ -194,10 +194,11 @@ export default function LogEventsPage() {
       <Card variant="raised" className="space-y-4">
         <form onSubmit={handleParseText} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="block text-sm font-bold" style={{ color: "var(--text)" }}>
+            <label htmlFor="log-text-area" className="block text-sm font-bold" style={{ color: "var(--text)" }}>
               {t("log.textLabel")}
             </label>
             <textarea
+              id="log-text-area"
               rows={3}
               value={textInput}
               onChange={(e) => setTextInput(e.target.value)}
@@ -338,10 +339,11 @@ export default function LogEventsPage() {
                   ) : (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="space-y-1.5">
-                        <label className="block text-xs font-semibold" style={{ color: "var(--text)" }}>
+                        <label htmlFor={`log-ing-${p.proposal_id}`} className="block text-xs font-semibold" style={{ color: "var(--text)" }}>
                           {t("log.selectIngredient")}
                         </label>
                         <select
+                          id={`log-ing-${p.proposal_id}`}
                           value={p.ingredient_key || ""}
                           onChange={(e) => {
                             const nextKey = e.target.value;
