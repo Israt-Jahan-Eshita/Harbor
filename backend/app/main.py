@@ -12,6 +12,21 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.api import (
+    bazar,
+    dashboard,
+    engine as engine_api,
+    eval as eval_api,
+    events,
+    households,
+    internal,
+    members,
+    menu,
+    prescriptions,
+    push,
+    reminders,
+    stock,
+)
 from app.config import get_settings
 from app.db import get_db
 from app.errors import register_exception_handlers
@@ -58,6 +73,20 @@ def create_app() -> FastAPI:
         return response
 
     register_exception_handlers(application)
+
+    application.include_router(households.router)
+    application.include_router(members.router)
+    application.include_router(prescriptions.router)
+    application.include_router(events.router)
+    application.include_router(stock.router)
+    application.include_router(menu.router)
+    application.include_router(bazar.router)
+    application.include_router(reminders.router)
+    application.include_router(push.router)
+    application.include_router(dashboard.router)
+    application.include_router(internal.router)
+    application.include_router(engine_api.router)
+    application.include_router(eval_api.router)
 
     @application.get("/healthz", tags=["system"])
     def healthz(db: Session = Depends(get_db)):
