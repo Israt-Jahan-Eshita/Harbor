@@ -160,3 +160,7 @@ def test_fallback_template_format() -> None:
     assert "আজকের জন্য নিরাপদ: লাউ দিয়ে মসুর ডাল" in rendered["explanation_bn"]
     assert "মা-এর অংশ লবণ ও কাঁচামরিচ দেওয়ার আগে আলাদা করে তুলে রাখুন।" in rendered["explanation_bn"]
     assert "[Rule: LOW_SODIUM_SODIUM]" in rendered["explanation_bn"]
+    assert "Safe for today: Bottle Gourd Red Lentil Dal" in rendered["explanation_en"]
+    assert "Set aside মা's portion before adding salt" in rendered["explanation_en"]
+    assert "[Rule: LOW_SODIUM_SODIUM]" in rendered["explanation_en"]
+
