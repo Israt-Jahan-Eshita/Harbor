@@ -421,13 +421,32 @@ def test_events_parse_confirm_demo_menu_review_cooked_bazar_reminders_and_engine
     assert take_late.status_code == 200
     assert take_late.json()["status"] == "taken_late"
 
-    # Push subscribe & Day-1 monthly bazar prompt
+    # Push subscribe (caregiver + patient) & Day-1 monthly bazar prompt
+    vapid_res = client.get("/push/vapid-public-key")
+    assert vapid_res.status_code == 200
+    assert "public_key" in vapid_res.json()
+    assert vapid_res.headers.get("X-Content-Type-Options") == "nosniff"
+    assert vapid_res.headers.get("X-Frame-Options") == "DENY"
+
     sub_res = client.post(
         "/push/subscribe",
         headers=headers,
         json={"member_id": mother["id"], "endpoint": "https://push.test/1", "p256dh": "k", "auth": "a"},
     )
     assert sub_res.status_code == 200
+
+    pt_sub_res = client.post(
+        "/push/subscribe-patient",
+        params={"token": mother["patient_token"]},
+        json={"endpoint": "https://push.test/pt1", "p256dh": "k2", "auth": "a2"},
+    )
+    assert pt_sub_res.status_code == 200
+    assert client.post(
+        "/push/subscribe-patient",
+        params={"token": "invalid-pt-token"},
+        json={"endpoint": "https://push.test/pt2", "p256dh": "k3", "auth": "a3"},
+    ).status_code == 401
+
     tick_day1 = client.post(
         "/internal/tick",
         headers={"X-Tick-Secret": settings.tick_secret},
@@ -436,7 +455,7 @@ def test_events_parse_confirm_demo_menu_review_cooked_bazar_reminders_and_engine
     assert tick_day1.status_code == 200
     assert tick_day1.json()["bazar_prompts_sent"] >= 1
 
-    # 5. Engine Explorer & Eval honest status
+    # 5. Engine Explorer & Eval measured results
     cat = client.get("/engine/catalog", headers=headers)
     assert cat.status_code == 200
     assert len(cat.json()["recipes"]) == 40
@@ -452,4 +471,5 @@ def test_events_parse_confirm_demo_menu_review_cooked_bazar_reminders_and_engine
 
     ev_res = client.get("/eval/results")
     assert ev_res.status_code == 200
-    assert ev_res.json()["status"] == "not_run_yet"
+    assert ev_res.json()["status"] == "available"
+    assert ev_res.json()["results"]["case_count"] == 30

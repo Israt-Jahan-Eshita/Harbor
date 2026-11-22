@@ -5,6 +5,7 @@ import { Bell, Clock, Languages, Palette, Sparkles } from "lucide-react";
 import { Button, Card, Input, Tabs, Toggle, useToast } from "@/components/ui";
 import { ApiError, harborApi } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { subscribeCaregiverPush } from "@/lib/push";
 import { useSession } from "@/lib/session";
 import { ThemeMode, useTheme } from "@/lib/theme";
 
@@ -20,11 +21,70 @@ export default function SettingsPage() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [consent, setConsent] = useState(session?.consentGiven ?? false);
   const [loadingDemo, setLoadingDemo] = useState(false);
+  const [savingMeals, setSavingMeals] = useState(false);
 
-  function handleSaveMealTimes(e: React.FormEvent) {
+  async function handleSaveMealTimes(e: React.FormEvent) {
     e.preventDefault();
-    updateMealTimes({ breakfast, lunch, dinner });
+    const nextMeals = { breakfast, lunch, dinner };
+    updateMealTimes(nextMeals);
+    if (session) {
+      setSavingMeals(true);
+      try {
+        await harborApi.updateHouseholdSettings(
+          session.householdId,
+          { meal_times: nextMeals },
+          session.token,
+          locale,
+        );
+      } catch (err) {
+        showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
+        setSavingMeals(false);
+        return;
+      }
+      setSavingMeals(false);
+    }
     showToast(t("settings.savedToast"), "success");
+  }
+
+  async function handleTogglePush(next: boolean) {
+    if (!next) {
+      setPushEnabled(false);
+      return;
+    }
+    if (!session) {
+      showToast(t("auth.requiredDesc"), "info");
+      return;
+    }
+    const res = await subscribeCaregiverPush(session.token, locale);
+    if (res.ok) {
+      setPushEnabled(true);
+      showToast(t("settings.pushSubscribed"), "success");
+    } else if (res.reason === "unsupported") {
+      setPushEnabled(false);
+      showToast(t("settings.pushUnsupported"), "info");
+    } else {
+      setPushEnabled(false);
+      showToast(t("settings.pushDenied"), "error");
+    }
+  }
+
+  async function handleToggleConsent(next: boolean) {
+    setConsent(next);
+    if (session) {
+      try {
+        await harborApi.updateHouseholdSettings(
+          session.householdId,
+          { consent_given: next },
+          session.token,
+          locale,
+        );
+        setSession({ ...session, consentGiven: next });
+        showToast(t("settings.savedToast"), "success");
+      } catch (err) {
+        setConsent(!next);
+        showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
+      }
+    }
   }
 
   async function handleLoadDemo() {
@@ -151,8 +211,8 @@ export default function SettingsPage() {
             />
           </div>
 
-          <Button type="submit" variant="primary" data-testid="settings-save-meals">
-            {t("common.save")}
+          <Button type="submit" variant="primary" disabled={savingMeals} data-testid="settings-save-meals">
+            {savingMeals ? t("common.loading") : t("common.save")}
           </Button>
         </form>
       </Card>
@@ -167,14 +227,14 @@ export default function SettingsPage() {
         </div>
         <Toggle
           checked={pushEnabled}
-          onChange={(v) => setPushEnabled(v)}
+          onChange={(v) => void handleTogglePush(v)}
           label={t("settings.pushLabel")}
           hint={t("settings.pushHint")}
           data-testid="toggle-push"
         />
         <Toggle
           checked={consent}
-          onChange={(v) => setConsent(v)}
+          onChange={(v) => void handleToggleConsent(v)}
           label={t("settings.consentStatusLabel")}
           data-testid="toggle-consent"
         />

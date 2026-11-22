@@ -118,6 +118,9 @@
     "notificationsTitle": "Privacy & Notifications",
     "pushLabel": "Enable Web Push Reminders",
     "pushHint": "Lock-screen notifications never mention diseases or medicines—generic text only (\"Time for medicine\").",
+    "pushSubscribed": "Web Push reminders enabled on this device.",
+    "pushUnsupported": "Web Push is not supported in this browser.",
+    "pushDenied": "Notification permission was denied or VAPID is unavailable.",
     "consentStatusLabel": "Third-party voice & prescription API consent",
     "demoTitle": "Load Demo Household (SPEC §9.7)",
     "demoDesc": "Loads Father (CKD, low potassium), Mother (diabetes/hypertension + Enalapril), Arif (prawn allergy), and Sumaiya (caregiver).",
@@ -318,11 +321,13 @@
     "applyReviewBtn": "Recalculate Safe Menu",
     "emptyState": "Select date and meal, then press \"What Should I Cook?\" to run the deterministic shared-pot planner.",
     "scoreLabels": {
-      "safety_score": "Household Safety",
-      "pantry_score": "Pantry Coverage",
-      "expiry_score": "Use Near-Expiry",
-      "budget_score": "Budget Fit",
-      "variety_score": "7-Day Variety"
+      "stock_fit": "Pantry Stock Coverage",
+      "expiry_bonus": "Use Near-Expiry Items",
+      "season_bonus": "Seasonal Fit",
+      "health_fit": "Household Safety Fit",
+      "taste": "Family Taste Rating",
+      "price_fit": "Budget Affordability",
+      "repeat_penalty": "Recent Repeat Penalty"
     }
   },
   "log": {
@@ -423,7 +428,9 @@
     "upcomingLabel": "Next scheduled time",
     "takenCountLabel": "Confirmed today",
     "pollingHint": "Auto-checking every 15 seconds",
-    "invalidToken": "This patient link is invalid or expired."
+    "invalidToken": "This patient link is invalid or expired.",
+    "enablePushBtn": "Enable Reminders on This Phone",
+    "pushEnabled": "Phone reminders enabled."
   },
   "engine": {
     "title": "Deterministic Safety Engine Explorer",

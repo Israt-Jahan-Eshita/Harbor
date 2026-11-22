@@ -60,16 +60,46 @@ def create_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.cors_origins_list,
         allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=[
+            "Authorization",
+            "Content-Type",
+            "Accept-Language",
+            "X-Tick-Secret",
+            "X-Request-Id",
+        ],
     )
+
+    max_payload_bytes = 12 * 1024 * 1024  # 12 MB ceiling above 10 MB media limits
 
     @application.middleware("http")
     async def request_id_middleware(request: Request, call_next):
         request_id = request.headers.get("X-Request-Id") or str(uuid.uuid4())
         request.state.request_id = request_id
+
+        content_length_raw = request.headers.get("content-length")
+        if content_length_raw:
+            try:
+                if int(content_length_raw) > max_payload_bytes:
+                    resp = JSONResponse(
+                        status_code=413,
+                        content={
+                            "code": "PAYLOAD_TOO_LARGE",
+                            "message": "Request payload exceeds 12 MB limit.",
+                            "details": {},
+                        },
+                    )
+                    resp.headers["X-Request-Id"] = request_id
+                    return resp
+            except ValueError:
+                pass
+
         response = await call_next(request)
         response.headers["X-Request-Id"] = request_id
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "microphone=(self), camera=(self)"
         return response
 
     register_exception_handlers(application)

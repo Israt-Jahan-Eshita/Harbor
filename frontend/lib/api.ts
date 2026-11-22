@@ -410,11 +410,10 @@ export interface StockAdjustResponse {
 export interface MissingIngredientItem {
   ingredient_key: string;
   name_bn?: string;
-  needed: number;
-  in_stock: number;
-  shortfall: number;
+  missing_qty: number;
   unit: string;
   est_cost_bdt?: number | null;
+  is_estimated?: boolean;
 }
 
 export interface MenuTopDish {
@@ -959,6 +958,11 @@ export const harborApi = {
       { token, locale },
     ),
 
+  getVapidPublicKey: (locale: Locale = "bn") =>
+    apiFetch<{ public_key: string; configured: boolean }>("/push/vapid-public-key", {
+      locale,
+    }),
+
   subscribePush: (
     payload: { member_id?: string | null; endpoint: string; p256dh: string; auth: string },
     token: string,
@@ -970,6 +974,20 @@ export const harborApi = {
       token,
       locale,
     }),
+
+  subscribePatientPush: (
+    patientToken: string,
+    payload: { endpoint: string; p256dh: string; auth: string },
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<{ subscribed: boolean }>(
+      `/push/subscribe-patient?token=${encodeURIComponent(patientToken)}`,
+      {
+        method: "POST",
+        body: payload,
+        locale,
+      },
+    ),
 
   getEngineCatalog: (token?: string | null, locale: Locale = "bn") =>
     apiFetch<EngineCatalogResponse>("/engine/catalog", {

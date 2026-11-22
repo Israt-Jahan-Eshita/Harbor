@@ -325,7 +325,7 @@ export default function MenuPage() {
                             className="rounded-full border border-[var(--border-subtle)] px-2.5 py-1"
                             style={{ color: "var(--text-muted)" }}
                           >
-                            {mi.name_bn || mi.ingredient_key}: {formatNumber(mi.shortfall)} {mi.unit}
+                            {mi.name_bn || mi.ingredient_key}: {formatNumber(mi.missing_qty)} {mi.unit}
                           </span>
                         ))}
                       </div>

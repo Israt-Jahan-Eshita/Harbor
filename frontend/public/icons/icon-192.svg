@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="harborBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A84925" />
+      <stop offset="100%" stop-color="#8B391A" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="176" height="176" rx="44" fill="url(#harborBg)" />
+  <rect x="18" y="18" width="156" height="156" rx="36" fill="none" stroke="#ECE6DB" stroke-opacity="0.35" stroke-width="3" />
+  <!-- Warm cooking pot + lid silhouette -->
+  <path d="M54 96 H138 V124 C138 140 122 150 96 150 C70 150 54 140 54 124 Z" fill="#ECE6DB" />
+  <rect x="42" y="90" width="108" height="10" rx="5" fill="#F6F1E7" />
+  <path d="M62 84 C62 66 130 66 130 84 Z" fill="#D9A441" />
+  <circle cx="96" cy="59" r="8" fill="#ECE6DB" />
+  <!-- Heart / care emblem inside pot -->
+  <path d="M96 136 C96 136 77 123 77 112 C77 106 82 102 88 102 C92 102 95 105 96 108 C97 105 100 102 104 102 C110 102 115 106 115 112 C115 123 96 136 96 136 Z" fill="#A84925" />
+</svg>
+

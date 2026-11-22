@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Bengali, Plus_Jakarta_Sans } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import { Providers } from "@/lib/providers";
@@ -22,6 +22,15 @@ export const metadata: Metadata = {
   title: "Harbor — Family Care Manager",
   description:
     "Bangla-first household food safety, shared-pot cooking, and meal-timed medicine reminders.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/icons/icon-192.svg",
+    apple: "/icons/icon-192.svg",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#A84925",
 };
 
 const THEME_INIT_SCRIPT = `

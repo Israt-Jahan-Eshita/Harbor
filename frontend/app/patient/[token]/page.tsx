@@ -6,6 +6,7 @@ import { BellRing, CheckCircle2, Clock, Languages, Moon, Sun } from "lucide-reac
 import { Button, Card, PatientDomeButton, Skeleton, useToast } from "@/components/ui";
 import { ApiError, harborApi, PatientDueResponse } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
+import { subscribePatientPush } from "@/lib/push";
 import { useTheme } from "@/lib/theme";
 
 export default function PatientReminderPage() {
@@ -20,6 +21,20 @@ export default function PatientReminderPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [justConfirmed, setJustConfirmed] = useState(false);
+  const [pushReady, setPushReady] = useState(false);
+
+  async function handleEnablePatientPush() {
+    if (!token) return;
+    const res = await subscribePatientPush(token, locale);
+    if (res.ok) {
+      setPushReady(true);
+      showToast(t("patient.pushEnabled"), "success");
+    } else if (res.reason === "unsupported") {
+      showToast(t("settings.pushUnsupported"), "info");
+    } else {
+      showToast(t("settings.pushDenied"), "error");
+    }
+  }
 
   const loadDue = useCallback(async () => {
     if (!token) return;
@@ -225,9 +240,20 @@ export default function PatientReminderPage() {
         ) : null}
       </div>
 
-      <p className="text-center text-xs" style={{ color: "var(--text-muted)" }}>
-        {t("patient.pollingHint")}
-      </p>
+      <div className="space-y-2 text-center">
+        {!pushReady && (
+          <Button
+            variant="ghost"
+            onClick={() => void handleEnablePatientPush()}
+            className="!min-h-[44px] !px-4 !py-1.5 !text-xs mx-auto"
+          >
+            {t("patient.enablePushBtn")}
+          </Button>
+        )}
+        <p className="text-center text-xs" style={{ color: "var(--text-muted)" }}>
+          {t("patient.pollingHint")}
+        </p>
+      </div>
     </div>
   );
 }
