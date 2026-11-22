@@ -1,0 +1,63 @@
+/* Harbor Design Tokens — Warm Neumorphic / Skeuomorphic + Glass Palette
+ * STRICT RULE: Zero blue, purple, or green hues anywhere in the theme.
+ */
+
+:root,
+[data-theme="light"] {
+  --bg: #ECE6DB;
+  --surface: #EFE9DE;
+  --surface-elevated: #F6F1E7;
+  --shadow-light: #FFFFFF;
+  --shadow-dark: #C9BFAE;
+  --text: #2B2621;
+  --text-muted: #62584E;
+  --accent: #A84925;
+  --accent-strong: #8B391A;
+  --on-accent: #FFFDF9;
+  --saffron: #D9A441;
+  --saffron-text: #744B04;
+  --on-saffron: #2B2621;
+  --danger: #B3402F;
+  --on-danger: #FFFDF9;
+  --ok: #785B17;
+  --on-ok: #FFFDF9;
+  --border-subtle: rgba(106, 96, 85, 0.24);
+  --border-strong: rgba(98, 88, 78, 0.45);
+  --glass-bg: rgba(255, 250, 242, 0.72);
+  --glass-bg-solid: #F7F1E7;
+  --glass-border: rgba(255, 255, 255, 0.78);
+  --glass-shadow: 0 8px 30px rgba(43, 38, 33, 0.12);
+  --skeu-highlight: rgba(255, 255, 255, 0.65);
+  --skeu-shade: rgba(43, 38, 33, 0.24);
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #1E1A16;
+  --surface: #26211C;
+  --surface-elevated: #302A24;
+  --shadow-light: #352E27;
+  --shadow-dark: #110E0B;
+  --text: #EFE7DA;
+  --text-muted: #B8AD9E;
+  --accent: #E07A52;
+  --accent-strong: #F09470;
+  --on-accent: #1E1A16;
+  --saffron: #E8B04E;
+  --saffron-text: #F0C26E;
+  --on-saffron: #1E1A16;
+  --danger: #E97866;
+  --on-danger: #1E1A16;
+  --ok: #D9B25A;
+  --on-ok: #1E1A16;
+  --border-subtle: rgba(239, 231, 218, 0.16);
+  --border-strong: rgba(239, 231, 218, 0.34);
+  --glass-bg: rgba(46, 40, 33, 0.75);
+  --glass-bg-solid: #2B251F;
+  --glass-border: rgba(255, 240, 220, 0.18);
+  --glass-shadow: 0 10px 32px rgba(0, 0, 0, 0.42);
+  --skeu-highlight: rgba(255, 240, 220, 0.24);
+  --skeu-shade: rgba(0, 0, 0, 0.55);
+  color-scheme: dark;
+}
+
