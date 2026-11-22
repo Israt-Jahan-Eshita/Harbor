@@ -33,6 +33,12 @@
 - `pywebpush==2.5.0`, `bcrypt==5.0.0`, `itsdangerous==2.2.0`
 - `pytest==9.2.0`, `pytest-asyncio==1.5.0`, `httpx==0.28.1`
 
+### Frontend (Node.js v24.16.0 / Next.js App Router)
+- `next==16.4.6`, `react==19.3.1`, `react-dom==19.3.1`
+- `tailwindcss==4.3.5`, `@tailwindcss/postcss==4.3.5`, `typescript==5.9.3`
+- `@tanstack/react-query==5.108.2`, `lucide-react==0.540.0`
+- `vitest==3.2.7`, `@testing-library/react==16.3.3`
+
 ## Local Setup (Backend)
 
 1. Ensure PostgreSQL is running (either local PostgreSQL 18 or `docker compose up -d db`) with databases `harbor_dev` and `harbor_test`.
@@ -53,4 +59,16 @@
    ```powershell
    uvicorn app.main:app --reload
    pytest
+   ```
+
+## Local Setup (Frontend)
+
+1. Copy `frontend/.env.example` to `frontend/.env.local`.
+2. Install packages and run tests / dev server:
+   ```powershell
+   cd frontend
+   npm install
+   npm test
+   npm run lint
+   npm run dev
    ```
