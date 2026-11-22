@@ -250,14 +250,48 @@ export default function WelcomePage() {
         </Card>
       )}
 
-      <Card variant="glass" className="flex items-start gap-3">
-        <Sparkles className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
-        <div className="space-y-1 text-sm">
-          <p className="font-bold" style={{ color: "var(--text)" }}>
-            {t("welcome.demoTipTitle")}
-          </p>
-          <p style={{ color: "var(--text-muted)" }}>{t("welcome.demoTipBody")}</p>
+      <Card variant="glass" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <Sparkles className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
+          <div className="space-y-1 text-sm">
+            <p className="font-bold" style={{ color: "var(--text)" }}>
+              {t("welcome.demoTipTitle")}
+            </p>
+            <p style={{ color: "var(--text-muted)" }}>{t("welcome.demoTipBody")}</p>
+          </div>
         </div>
+        <Button
+          variant="neu"
+          onClick={async () => {
+            setSubmitting(true);
+            setErrorMsg(null);
+            try {
+              const res = await harborApi.seedDemoHousehold(locale);
+              setSession({
+                householdId: res.household_id,
+                householdName: res.name,
+                accessCode: res.access_code,
+                token: res.token,
+                consentGiven: res.consent_given,
+                mealTimes: res.meal_times,
+                monthlyBudgetBdt: res.monthly_budget_bdt,
+              });
+              showToast(`${t("welcome.loginSuccess")} (${res.access_code})`, "success");
+              router.push("/dashboard");
+            } catch (err) {
+              const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
+              setErrorMsg(msg);
+              showToast(msg, "error");
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          disabled={submitting}
+          data-testid="welcome-quick-demo"
+          className="shrink-0"
+        >
+          {submitting ? t("common.loading") : t("welcome.demoQuickLoad")}
+        </Button>
       </Card>
     </div>
   );
