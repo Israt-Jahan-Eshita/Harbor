@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import time
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -14,6 +16,15 @@ from app.core.types import HouseholdCandidate, IngredientData, RecipeData, Score
 from app.core.validator import DOSE_PATTERNS, ExplanationItem, ExplanationOutput, validate_response
 from app.llm.client import LLMClient
 from app.llm.prompts import EXPLAIN_SYSTEM_PROMPT
+
+_EXPLAIN_CACHE: dict[str, tuple[float, dict[str, Any]]] = {}
+_EXPLAIN_CACHE_TTL_SECONDS = 6 * 3600
+_EXPLAIN_CACHE_MAX_SIZE = 200
+
+
+def clear_explanation_cache() -> None:
+    """Clear in-memory grounded explanation cache (used by tests)."""
+    _EXPLAIN_CACHE.clear()
 
 
 class BilingualExplanationItem(BaseModel):
@@ -81,6 +92,36 @@ def generate_grounded_explanations(
             "validation_reasons": [],
         }
 
+    cache_key_payload = [
+        {
+            "recipe_id": s.recipe.id,
+            "status": s.status,
+            "split_for": sorted(s.split_for),
+            "reasons": sorted(
+                candidates_by_id[s.recipe.id].reasons
+                if s.recipe.id in candidates_by_id and candidates_by_id[s.recipe.id].reasons
+                else ["SAFE_DIRECT"]
+            ),
+        }
+        for s in top_3
+    ]
+    cache_key = hashlib.sha256(
+        json.dumps(cache_key_payload, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    now_mono = time.monotonic()
+    cached_entry = _EXPLAIN_CACHE.get(cache_key)
+    if cached_entry is not None:
+        exp_ts, cached_val = cached_entry
+        if now_mono < exp_ts:
+            return {
+                "explanations_by_recipe": dict(cached_val["explanations_by_recipe"]),
+                "validated": cached_val["validated"],
+                "used_template": cached_val["used_template"],
+                "validation_reasons": list(cached_val["validation_reasons"]),
+                "cached": True,
+            }
+        _EXPLAIN_CACHE.pop(cache_key, None)
+
     dish_context_payload = []
     for scored in top_3:
         cand = candidates_by_id.get(scored.recipe.id)
@@ -121,6 +162,8 @@ def generate_grounded_explanations(
         schema_cls=BilingualExplanationOutput,
         db=db,
         input_summary=f"top3_recipes={[s.recipe.key for s in top_3]}",
+        model_override=llm_client.llm_fast_model,
+        max_completion_tokens=700,
     )
 
     if llm_out is None:
@@ -171,9 +214,24 @@ def generate_grounded_explanations(
                 "used_template": False,
             }
 
-    return {
+    used_template = all(v.get("used_template") for v in by_id.values())
+    result = {
         "explanations_by_recipe": by_id,
         "validated": True,
-        "used_template": all(v.get("used_template") for v in by_id.values()),
+        "used_template": used_template,
         "validation_reasons": [],
     }
+    if not used_template:
+        if len(_EXPLAIN_CACHE) >= _EXPLAIN_CACHE_MAX_SIZE:
+            oldest_key = next(iter(_EXPLAIN_CACHE))
+            _EXPLAIN_CACHE.pop(oldest_key, None)
+        _EXPLAIN_CACHE[cache_key] = (
+            time.monotonic() + _EXPLAIN_CACHE_TTL_SECONDS,
+            {
+                "explanations_by_recipe": dict(by_id),
+                "validated": True,
+                "used_template": False,
+                "validation_reasons": [],
+            },
+        )
+    return result

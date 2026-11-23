@@ -204,6 +204,8 @@ def parse_events_from_text(
         schema_cls=EventParseOutput,
         db=db,
         input_summary=raw_text[:200],
+        model_override=llm_client.llm_fast_model,
+        max_completion_tokens=600,
     )
     if parsed is None:
         return {

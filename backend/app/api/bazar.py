@@ -67,6 +67,8 @@ def build_bazar_list_endpoint(
     return {
         "bazar_list_id": str(bl.id),
         "status": bl.status,
+        "price_label_bn": "আনুমানিক",
+        "price_label_en": "Estimated",
         **plan,
     }
 
@@ -99,6 +101,7 @@ def confirm_bazar_list(
         "est_total_bdt": float(bl.est_total_bdt),
         "items": bl.items,
         "price_label_bn": "আনুমানিক",
+        "price_label_en": "Estimated",
     }
 
 
@@ -168,6 +171,7 @@ def get_latest_bazar(
             "est_total_bdt": float(bl.est_total_bdt),
             "status": bl.status,
             "price_label_bn": "আনুমানিক",
+            "price_label_en": "Estimated",
             "created_at": bl.created_at.isoformat(),
         }
     }

@@ -14,11 +14,12 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
+from app.core.reminders import GENERIC_REMINDER_TEXT_BN
 from app.models import Alert, PushSubscription
 
 logger = logging.getLogger("harbor.notifications")
 
-GENERIC_PATIENT_PUSH_TEXT = "ওষুধের সময় হয়েছে"
+GENERIC_PATIENT_PUSH_TEXT = GENERIC_REMINDER_TEXT_BN
 
 
 def record_and_dispatch_alert(

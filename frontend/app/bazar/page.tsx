@@ -11,6 +11,7 @@ import {
   BazarPurchasedItemPayload,
   harborApi,
 } from "@/lib/api";
+import { getDhakaMonthISO } from "@/lib/date";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
@@ -26,8 +27,9 @@ export default function BazarPage() {
   const { session } = useSession();
   const { showToast } = useToast();
 
-  const [month, setMonth] = useState(() => new Date().toISOString().slice(0, 7));
-  const [budget, setBudget] = useState(() => String(session?.monthlyBudgetBdt ?? 15000));
+  const [month, setMonth] = useState(() => getDhakaMonthISO());
+  const [budgetOverride, setBudgetOverride] = useState<string | null>(null);
+  const budget = budgetOverride ?? String(session?.monthlyBudgetBdt ?? 15000);
   const [plan, setPlan] = useState<BazarBuildResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [building, setBuilding] = useState(false);
@@ -194,7 +196,7 @@ export default function BazarPage() {
             type="number"
             min={100}
             value={budget}
-            onChange={(e) => setBudget(e.target.value)}
+            onChange={(e) => setBudgetOverride(e.target.value)}
             required
             data-testid="bazar-budget-input"
           />

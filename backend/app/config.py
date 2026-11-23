@@ -30,8 +30,11 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_api_key: str = ""
     llm_model: str = "openai/gpt-oss-120b"
+    llm_fast_model: str = "llama-3.1-8b-instant"
     stt_model: str = "whisper-large-v3"
     vision_model: str = "gemini-3.5-flash"
+    groq_daily_token_cap: int = 150000
+    groq_429_cooldown_seconds: int = 900
 
     # Security & App settings
     env: Literal["dev", "test", "prod"] = "dev"
@@ -39,6 +42,11 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     session_secret: str = Field(..., min_length=16)
     tick_secret: str = Field(..., min_length=8)
+    allow_demo_tick_override: bool = False
+    default_monthly_budget_bdt: int = 15000
+    max_household_members: int = 12
+    db_pool_size: int = 3
+    db_max_overflow: int = 2
 
     # Web Push (VAPID)
     vapid_public_key: str = ""

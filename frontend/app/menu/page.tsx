@@ -13,10 +13,11 @@ import {
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
 import { Badge, Button, Card, Input, Sheet, Skeleton, Tabs, Toggle, useToast } from "@/components/ui";
 import { ApiError, harborApi, MealSlot, MemberRecord, MenuResponse, MenuTopDish } from "@/lib/api";
+import { getDhakaTodayISO } from "@/lib/date";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
-const ALLERGEN_KEYS = [
+const DEFAULT_ALLERGEN_KEYS: string[] = [
   "prawn_shellfish",
   "fish",
   "egg",
@@ -26,16 +27,17 @@ const ALLERGEN_KEYS = [
   "wheat_gluten",
   "soy",
   "sesame",
-] as const;
+];
 
 export default function MenuPage() {
   const { locale, formatNumber, pickLocalized, t } = useI18n();
   const { session } = useSession();
   const { showToast } = useToast();
 
-  const [forDate, setForDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [forDate, setForDate] = useState(() => getDhakaTodayISO());
   const [meal, setMeal] = useState<MealSlot>("dinner");
-  const [useAgent, setUseAgent] = useState(true);
+  const [useAgent, setUseAgent] = useState(false);
+  const [allergenKeys, setAllergenKeys] = useState<string[]>(DEFAULT_ALLERGEN_KEYS);
   const [menuData, setMenuData] = useState<MenuResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -52,13 +54,21 @@ export default function MenuPage() {
   useEffect(() => {
     if (!session) return;
     let cancelled = false;
-    harborApi
-      .listMembers(session.token, locale)
+    Promise.resolve(harborApi.listMembers(session.token, locale))
       .then((res) => {
-        if (!cancelled) setMembers(res.members);
+        if (!cancelled && res?.members) setMembers(res.members);
       })
       .catch(() => {
         /* members list optional until review opens */
+      });
+    Promise.resolve(harborApi.getEngineCatalog(session.token, locale))
+      .then((cat) => {
+        if (!cancelled && cat?.allergens?.length) {
+          setAllergenKeys(cat.allergens);
+        }
+      })
+      .catch(() => {
+        /* fallback allergen list stays active */
       });
     return () => {
       cancelled = true;
@@ -98,6 +108,7 @@ export default function MenuPage() {
           guest_count: Math.max(0, Number(guestCount) || 0),
           guest_restrictions: guestRestrictions,
           away_member_ids: awayMemberIds,
+          use_agent: useAgent,
         },
         session.token,
         locale,
@@ -117,7 +128,7 @@ export default function MenuPage() {
     if (!session) return;
     try {
       await harborApi.markMenuCooked(
-        { recipe_id: dish.recipe_id, servings: dish.scaled_servings, for_date: forDate },
+        { recipe_id: dish.recipe_id, servings: dish.scaled_servings, for_date: forDate, meal },
         session.token,
         locale,
       );
@@ -461,7 +472,7 @@ export default function MenuPage() {
               {t("menu.guestRestrictionsLabel")}
             </p>
             <div className="flex flex-wrap gap-2">
-              {ALLERGEN_KEYS.map((ak) => {
+              {allergenKeys.map((ak) => {
                 const active = guestRestrictions.includes(ak);
                 return (
                   <button
@@ -477,7 +488,7 @@ export default function MenuPage() {
                     }`}
                     style={active ? undefined : { color: "var(--text)" }}
                   >
-                    {t(`members.allergens.${ak}`)}
+                    {DEFAULT_ALLERGEN_KEYS.includes(ak) ? t(`members.allergens.${ak}`) : ak}
                   </button>
                 );
               })}

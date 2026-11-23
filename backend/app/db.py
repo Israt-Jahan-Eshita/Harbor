@@ -15,10 +15,16 @@ class Base(DeclarativeBase):
 
 
 def build_engine(database_url: str):
-    """Create a SQLAlchemy engine for PostgreSQL."""
+    """Create a tuned SQLAlchemy engine for PostgreSQL (Supabase Pooler friendly)."""
+    cfg = get_settings()
+    connect_args = {"prepare_threshold": None} if ":6543" in database_url else {}
     return create_engine(
         database_url,
         pool_pre_ping=True,
+        pool_size=cfg.db_pool_size,
+        max_overflow=cfg.db_max_overflow,
+        pool_recycle=300,
+        connect_args=connect_args,
         future=True,
     )
 

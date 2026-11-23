@@ -158,7 +158,7 @@ export default function EngineExplorerPage() {
 
             <div className="space-y-1.5">
               <label htmlFor="engine-recipe-select" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
-                {t("engine.recipeSelectLabel")}
+                {t("engine.recipeSelectLabel", { count: catalog.recipes.length })}
               </label>
               <select
                 id="engine-recipe-select"

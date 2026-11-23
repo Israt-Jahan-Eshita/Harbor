@@ -7,7 +7,8 @@ import uuid
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.orm import Session
 
-from app.core.rules import check_dish_safe
+from app.api.prescriptions import DRUG_CLASS_CATALOG
+from app.core.rules import ALLERGEN_RULE_NAMES, check_dish_safe
 from app.core.types import MedicineData, MemberData
 from app.db import get_db
 from app.deps import verify_session_token
@@ -33,6 +34,15 @@ def get_engine_catalog(
         except AppError:
             members_out = []
 
+    presets_out = sorted({dp.preset for dp in ctx.diet_presets})
+    allergens_out = sorted(
+        {tag for ing in ctx.ingredients.values() for tag in ing.allergen_tags}
+        | set(ALLERGEN_RULE_NAMES.keys())
+    )
+    drug_classes_out = sorted(
+        {entry["value"] for entry in DRUG_CLASS_CATALOG} | set(ctx.known_drug_classes)
+    )
+
     return {
         "recipes": [
             {
@@ -47,25 +57,9 @@ def get_engine_catalog(
             for r in recipes
         ],
         "members": members_out,
-        "presets": ["low_gi", "low_sodium", "low_purine", "low_potassium"],
-        "allergens": [
-            "prawn_shellfish",
-            "fish",
-            "egg",
-            "milk",
-            "peanut",
-            "tree_nut",
-            "wheat_gluten",
-            "soy",
-            "sesame",
-        ],
-        "drug_classes": [
-            "ace_inhibitor",
-            "arb",
-            "k_sparing_diuretic",
-            "statin_cyp3a4",
-            "none_modelled",
-        ],
+        "presets": presets_out,
+        "allergens": allergens_out,
+        "drug_classes": drug_classes_out,
         "age_groups": ["child_under_1", "child_under_5", "child", "adult", "elder"],
     }
 

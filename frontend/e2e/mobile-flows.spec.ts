@@ -29,9 +29,9 @@ test.describe("Harbor Mobile End-to-End Flows (390x844)", () => {
     await page.getByTestId("lang-toggle").click();
     await expect(page.locator("html")).toHaveAttribute("lang", "bn");
 
-    // 2. Daily Menu (/menu): Deterministic suggest + Score breakdown + Excluded panel + Guest Review
+    // 2. Daily Menu (/menu): Deterministic suggest (default OFF) + Score breakdown + Excluded panel + Guest Review
     await page.goto("/menu");
-    await page.getByTestId("menu-toggle-agent").click(); // deterministic mode for fast offline-safe E2E
+    await expect(page.getByTestId("menu-toggle-agent")).toHaveAttribute("aria-checked", "false");
     await page.getByTestId("menu-suggest-btn").click();
     await expect(page.getByTestId("menu-dish-card-0")).toBeVisible();
 

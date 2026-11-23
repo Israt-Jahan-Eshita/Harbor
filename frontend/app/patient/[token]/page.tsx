@@ -84,14 +84,26 @@ export default function PatientReminderPage() {
       });
 
     const interval = setInterval(() => {
-      if (!cancelled) {
+      if (!cancelled && typeof document !== "undefined" && !document.hidden) {
         void loadDue();
       }
     }, 15000);
 
+    const handleVisibility = () => {
+      if (!cancelled && typeof document !== "undefined" && !document.hidden) {
+        void loadDue();
+      }
+    };
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibility);
+    }
+
     return () => {
       cancelled = true;
       clearInterval(interval);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
     };
   }, [token, locale, loadDue, t]);
 

@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import secrets
 import uuid
-from datetime import datetime
+from datetime import datetime, time as dt_time, timedelta
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.config import get_settings
@@ -131,11 +131,16 @@ def create_member(
     hh: Household = Depends(get_current_household),
     db: Session = Depends(get_db),
 ):
+    max_members = get_settings().max_household_members
     existing_count = len(
         db.scalars(select(Member.id).where(Member.household_id == hh.id)).all()
     )
-    if existing_count >= 12:
-        raise AppError("HOUSEHOLD_LIMIT", "Maximum 12 household members allowed.", status_code=400)
+    if existing_count >= max_members:
+        raise AppError(
+            "HOUSEHOLD_LIMIT",
+            f"Maximum {max_members} household members allowed.",
+            status_code=400,
+        )
 
     member = Member(
         household_id=hh.id,
@@ -261,11 +266,29 @@ def update_member_medicine(
     )
     if med is None:
         raise AppError("MEDICINE_NOT_FOUND", "Medicine not found.", status_code=404)
+    schedule_dirty = False
     for field in ("drug_class", "timing", "meal_slots", "verified_by_caregiver", "active"):
         val = getattr(payload, field)
         if val is not None:
+            if field in ("timing", "meal_slots", "verified_by_caregiver", "active"):
+                schedule_dirty = True
             setattr(med, field, val)
     db.flush()
+    if schedule_dirty:
+        settings = get_settings()
+        tz = ZoneInfo(settings.tz)
+        today = datetime.now(tz).date()
+        day_start = datetime.combine(today, dt_time.min, tzinfo=tz)
+        day_end = day_start + timedelta(days=1)
+        db.execute(
+            delete(DoseSchedule).where(
+                DoseSchedule.medicine_id == med.id,
+                DoseSchedule.status == "pending",
+                DoseSchedule.due_at >= day_start - timedelta(hours=2),
+                DoseSchedule.due_at < day_end,
+            )
+        )
+        db.flush()
     _schedule_today_doses_for_medicine(db, hh, member, med)
     db.commit()
     db.refresh(med)

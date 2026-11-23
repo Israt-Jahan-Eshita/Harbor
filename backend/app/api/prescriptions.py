@@ -73,6 +73,24 @@ def list_drug_classes():
     }
 
 
+async def _read_upload_limited(upload: UploadFile, max_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await upload.read(65536)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise AppError(
+                "PAYLOAD_TOO_LARGE",
+                "Prescription image exceeds 10 MB limit.",
+                status_code=413,
+            )
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 @router.post(
     "/members/{member_id}/prescription",
     dependencies=[Depends(enforce_rate_limit("prescription_extract", max_calls=15, window_seconds=60))],
@@ -101,8 +119,8 @@ async def upload_prescription_draft(
     if not content_type.startswith("image/"):
         raise AppError("INVALID_FILE_TYPE", "Only image files are accepted.", status_code=400)
 
-    image_bytes = await file.read()
-    if not image_bytes or len(image_bytes) > MAX_IMAGE_BYTES:
+    image_bytes = await _read_upload_limited(file, MAX_IMAGE_BYTES)
+    if not image_bytes:
         raise AppError(
             "INVALID_IMAGE_SIZE",
             "Prescription image must be non-empty and under 10 MB.",

@@ -31,6 +31,18 @@ export class ApiError extends Error {
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "http://localhost:8000";
 
+if (
+  typeof window !== "undefined" &&
+  process.env.NODE_ENV === "production" &&
+  !process.env.NEXT_PUBLIC_API_URL &&
+  window.location.hostname !== "localhost" &&
+  window.location.hostname !== "127.0.0.1"
+) {
+  console.error(
+    "[Harbor] NEXT_PUBLIC_API_URL was not set at build time; requests are defaulting to http://localhost:8000.",
+  );
+}
+
 export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   token?: string | null;
@@ -867,6 +879,7 @@ export const harborApi = {
       guest_count: number;
       guest_restrictions: string[];
       away_member_ids: string[];
+      use_agent?: boolean;
     },
     token: string,
     locale: Locale = "bn",
@@ -879,7 +892,7 @@ export const harborApi = {
     }),
 
   markMenuCooked: (
-    payload: { recipe_id: string; servings: number; for_date: string },
+    payload: { recipe_id: string; servings: number; for_date: string; meal?: MealSlot },
     token: string,
     locale: Locale = "bn",
   ) =>

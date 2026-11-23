@@ -8,7 +8,7 @@ export default defineConfig({
   timeout: 60_000,
   use: {
     baseURL: "http://localhost:3000",
-    channel: "chrome",
+    channel: process.env.PW_CHANNEL || (process.env.CI ? undefined : "chrome"),
     headless: true,
     viewport: { width: 390, height: 844 },
     locale: "bn-BD",

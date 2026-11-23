@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import json
 import uuid
 from datetime import date
@@ -42,6 +43,14 @@ READ_TOOL_WHITELIST: set[str] = {
     "build_monthly_list",
 }
 
+MENU_AGENT_TOOL_NAMES: set[str] = {
+    "get_household_state",
+    "get_inventory",
+    "find_shared_pot_dishes",
+    "score_dishes",
+    "get_seasonal_items",
+}
+
 
 def _compact_tool_result_for_llm(fn_name: str, payload: Any) -> str:
     """Summarize large tool outputs into compact valid JSON for the agent context."""
@@ -61,7 +70,7 @@ def _compact_tool_result_for_llm(fn_name: str, payload: Any) -> str:
                     "split_step_bn": c.get("split_step_bn"),
                     "reasons": c.get("reasons", []),
                 }
-                for c in (payload.get("candidates") or [])[:15]
+                for c in (payload.get("candidates") or [])[:8]
             ],
             "excluded": [
                 {
@@ -70,7 +79,7 @@ def _compact_tool_result_for_llm(fn_name: str, payload: Any) -> str:
                     "name_bn": (e.get("recipe") or {}).get("name_bn"),
                     "reasons": e.get("reasons", []),
                 }
-                for e in (payload.get("excluded") or [])[:15]
+                for e in (payload.get("excluded") or [])[:8]
             ],
         }
         return json.dumps(compact, ensure_ascii=False)
@@ -116,9 +125,11 @@ def run_deterministic_menu_pipeline(
     household_id: uuid.UUID,
     for_date: date,
     meal: str = "dinner",
-    monthly_budget_bdt: int = 15000,
+    monthly_budget_bdt: int | None = None,
 ) -> dict[str, Any]:
     """Run deterministic shared-pot + scoring + template explanations directly (zero LLM)."""
+    settings = get_settings()
+    budget = monthly_budget_bdt if monthly_budget_bdt is not None else settings.default_monthly_budget_bdt
     ctx, recipes, recipes_by_id = load_rule_context_and_recipes(db)
     members = load_household_members(db, household_id)
     guests, away_ids, _ = load_day_events(db, household_id, for_date)
@@ -139,11 +150,11 @@ def run_deterministic_menu_pipeline(
         stock_map=stock,
         context=ctx,
         current_month=for_date.month,
-        household_budget_bdt=monthly_budget_bdt,
+        household_budget_bdt=budget,
         people_count=max(1, shared.people_count),
         recent_cooked_recipe_keys=recent,
         user_price_observations=user_prices,
-        weights=get_settings().score_weights,
+        weights=settings.score_weights,
     )
     top_3 = ranked[:3]
     cands_by_id = {c.recipe.id: c for c in shared.candidates}
@@ -223,7 +234,7 @@ async def run_menu_planning_agent(
                     },
                 }
                 for t in mcp_tools
-                if t.name in READ_TOOL_WHITELIST
+                if t.name in MENU_AGENT_TOOL_NAMES
             ]
 
             messages: list[dict[str, Any]] = [
@@ -241,8 +252,15 @@ async def run_menu_planning_agent(
                 },
             ]
 
+            tool_params = inspect.signature(llm_client.call_groq_tools).parameters
+            supports_db_kw = "db" in tool_params or any(
+                p.kind == inspect.Parameter.VAR_KEYWORD for p in tool_params.values()
+            )
             for _ in range(max_tool_calls + 1):
-                msg = llm_client.call_groq_tools(messages=messages, tools=groq_tools)
+                if supports_db_kw:
+                    msg = llm_client.call_groq_tools(messages=messages, tools=groq_tools, db=db)
+                else:
+                    msg = llm_client.call_groq_tools(messages=messages, tools=groq_tools)
                 if msg is None:
                     fallback_reason = "AGENT_LLM_CALL_FAILED"
                     break

@@ -49,10 +49,14 @@ async def lifespan(_app: FastAPI):
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
+    is_prod = settings.env == "prod"
     application = FastAPI(
         title="Harbor: Family Care Manager API",
         version="0.1.0",
         description="Deterministic food-safety & shared-pot family care engine with bounded AI extraction/explanation.",
+        docs_url=None if is_prod else "/docs",
+        redoc_url=None if is_prod else "/redoc",
+        openapi_url=None if is_prod else "/openapi.json",
         lifespan=lifespan,
     )
 

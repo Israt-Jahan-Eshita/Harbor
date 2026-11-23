@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -14,7 +14,8 @@ from app.core.reminders import build_dose_schedule, evaluate_tick
 from app.core.types import DoseRecord, MedicineData
 from app.db import get_db
 from app.deps import verify_tick_secret
-from app.models import Alert, DoseSchedule, Household, Medicine, Member
+from app.errors import AppError
+from app.models import Alert, DoseSchedule, Household, LLMCall, Medicine, Member
 from app.services.notifications import record_and_dispatch_alert
 
 router = APIRouter(prefix="/internal", tags=["internal"])
@@ -27,9 +28,15 @@ def run_internal_tick(
 ):
     """Run idempotent scheduled jobs across all households.
 
-    Supports `?now=YYYY-MM-DDTHH:MM:SS+06:00` override for demoing reminder escalation.
+    Supports `?now=YYYY-MM-DDTHH:MM:SS+06:00` override when non-prod or explicitly permitted.
     """
     settings = get_settings()
+    if now is not None and settings.env == "prod" and not settings.allow_demo_tick_override:
+        raise AppError(
+            "TICK_OVERRIDE_FORBIDDEN",
+            "Time override is disabled in production.",
+            status_code=403,
+        )
     tz = ZoneInfo(settings.tz)
     current_now = (
         now.astimezone(tz)
@@ -37,8 +44,9 @@ def run_internal_tick(
         else (now.replace(tzinfo=tz) if now else datetime.now(tz))
     )
     target_date = current_now.date()
+    schedule_dates = [target_date, target_date + timedelta(days=1)]
 
-    # 1. Idempotently ensure DoseSchedule rows exist for target_date for confirmed active medicines
+    # 1. Idempotently ensure DoseSchedule rows exist for today + tomorrow (handles midnight crossovers)
     med_rows = db.execute(
         select(Medicine, Member, Household)
         .join(Member, Medicine.member_id == Member.id)
@@ -58,37 +66,39 @@ def run_internal_tick(
             verified_by_caregiver=True,
             active=True,
         )
-        recs = build_dose_schedule(
-            medicine=med_data,
-            member_id=str(member.id),
-            member_name=member.name,
-            meal_times=hh.meal_times,
-            for_date=target_date,
-            offsets_min=settings.reminder_offsets,
-            grace_minutes=settings.reminder_grace_minutes,
-            tz_name=settings.tz,
-        )
-        for rec in recs:
-            exists = db.scalar(
-                select(DoseSchedule).where(
-                    DoseSchedule.medicine_id == med.id,
-                    DoseSchedule.due_at == rec.due_at,
-                )
+        for sched_date in schedule_dates:
+            recs = build_dose_schedule(
+                medicine=med_data,
+                member_id=str(member.id),
+                member_name=member.name,
+                meal_times=hh.meal_times,
+                for_date=sched_date,
+                offsets_min=settings.reminder_offsets,
+                grace_minutes=settings.reminder_grace_minutes,
+                tz_name=settings.tz,
             )
-            if exists is None:
-                db.add(
-                    DoseSchedule(
-                        medicine_id=med.id,
-                        due_at=rec.due_at,
-                        window_end=rec.window_end,
-                        status="pending",
+            for rec in recs:
+                exists = db.scalar(
+                    select(DoseSchedule).where(
+                        DoseSchedule.medicine_id == med.id,
+                        DoseSchedule.due_at == rec.due_at,
                     )
                 )
-                created_schedules += 1
+                if exists is None:
+                    db.add(
+                        DoseSchedule(
+                            medicine_id=med.id,
+                            due_at=rec.due_at,
+                            window_end=rec.window_end,
+                            status="pending",
+                        )
+                    )
+                    created_schedules += 1
     db.flush()
 
-    # 2. Load pending/missed doses and existing alert keys for idempotency
-    existing_alerts = db.scalars(select(Alert)).all()
+    # 2. Load pending/missed doses and bounded recent alert keys for idempotency
+    alert_cutoff = current_now - timedelta(days=35)
+    existing_alerts = db.scalars(select(Alert).where(Alert.sent_at >= alert_cutoff)).all()
     existing_keys = {
         str(a.payload.get("alert_key"))
         for a in existing_alerts
@@ -179,6 +189,9 @@ def run_internal_tick(
                     },
                 )
                 bazar_prompts += 1
+
+    # 4. Prune aged LLM audit logs (>30 days)
+    db.execute(delete(LLMCall).where(LLMCall.created_at < current_now - timedelta(days=30)))
 
     db.commit()
     return {

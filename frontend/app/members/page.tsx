@@ -15,7 +15,7 @@ import {
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
-const ALLERGEN_KEYS = [
+const DEFAULT_ALLERGEN_KEYS: string[] = [
   "prawn_shellfish",
   "fish",
   "egg",
@@ -25,9 +25,9 @@ const ALLERGEN_KEYS = [
   "wheat_gluten",
   "soy",
   "sesame",
-] as const;
+];
 
-const PRESET_KEYS = ["low_potassium", "low_sodium", "low_gi", "low_purine"] as const;
+const DEFAULT_PRESET_KEYS: string[] = ["low_potassium", "low_sodium", "low_gi", "low_purine"];
 
 const ROLE_OPTIONS: MemberRole[] = ["caregiver", "patient", "child", "elder", "other"];
 const AGE_OPTIONS: AgeGroup[] = ["child_under_1", "child_under_5", "child", "adult", "elder"];
@@ -38,6 +38,8 @@ export default function MembersPage() {
   const { showToast } = useToast();
 
   const [members, setMembers] = useState<MemberRecord[]>([]);
+  const [allergenKeys, setAllergenKeys] = useState<string[]>(DEFAULT_ALLERGEN_KEYS);
+  const [presetKeys, setPresetKeys] = useState<string[]>(DEFAULT_PRESET_KEYS);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -82,6 +84,16 @@ export default function MembersPage() {
           setErrorMsg(err instanceof ApiError ? err.message : t("common.errorUnexpected"));
           setLoading(false);
         }
+      });
+    Promise.resolve(harborApi.getEngineCatalog(session.token, locale))
+      .then((cat) => {
+        if (!cancelled && cat) {
+          if (cat.allergens?.length) setAllergenKeys(cat.allergens);
+          if (cat.presets?.length) setPresetKeys(cat.presets);
+        }
+      })
+      .catch(() => {
+        /* fallback selector keys stay active */
       });
     return () => {
       cancelled = true;
@@ -354,7 +366,7 @@ export default function MembersPage() {
               {t("members.presetsLabel")}
             </p>
             <div className="flex flex-wrap gap-2">
-              {PRESET_KEYS.map((pk) => {
+              {presetKeys.map((pk) => {
                 const active = presets.includes(pk);
                 return (
                   <button
@@ -366,7 +378,7 @@ export default function MembersPage() {
                     }`}
                     style={active ? undefined : { color: "var(--text)" }}
                   >
-                    {t(`members.presets.${pk}`)}
+                    {DEFAULT_PRESET_KEYS.includes(pk) ? t(`members.presets.${pk}`) : pk}
                   </button>
                 );
               })}
@@ -378,7 +390,7 @@ export default function MembersPage() {
               {t("members.allergiesLabel")}
             </p>
             <div className="flex flex-wrap gap-2">
-              {ALLERGEN_KEYS.map((ak) => {
+              {allergenKeys.map((ak) => {
                 const active = allergies.includes(ak);
                 return (
                   <button
@@ -390,7 +402,7 @@ export default function MembersPage() {
                     }`}
                     style={active ? undefined : { color: "var(--text)" }}
                   >
-                    {t(`members.allergens.${ak}`)}
+                    {DEFAULT_ALLERGEN_KEYS.includes(ak) ? t(`members.allergens.${ak}`) : ak}
                   </button>
                 );
               })}

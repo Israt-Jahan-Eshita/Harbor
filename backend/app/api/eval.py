@@ -3,15 +3,28 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 from fastapi import APIRouter
 
 router = APIRouter(prefix="/eval", tags=["eval"])
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-EVAL_RESULTS_JSON = REPO_ROOT / "eval" / "results.json"
-EVAL_RESULTS_MD = REPO_ROOT / "eval" / "results.md"
+
+def _resolve_eval_dir() -> Path:
+    env_dir = os.environ.get("EVAL_DIR")
+    if env_dir:
+        return Path(env_dir)
+    for base in (Path(__file__).resolve().parents[3], Path(__file__).resolve().parents[2]):
+        candidate = base / "eval"
+        if candidate.exists():
+            return candidate
+    return Path(__file__).resolve().parents[3] / "eval"
+
+
+EVAL_DIR = _resolve_eval_dir()
+EVAL_RESULTS_JSON = EVAL_DIR / "results.json"
+EVAL_RESULTS_MD = EVAL_DIR / "results.md"
 
 
 @router.get("/results")

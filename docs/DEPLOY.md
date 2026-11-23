@@ -62,7 +62,7 @@ A ready-to-use Blueprint is provided in [`render.yaml`](../render.yaml).
 
 ### A. Backend Service (`harbor-api`)
 
-- **Runtime:** Python `3.11+`
+- **Runtime:** Python `3.11.9` (pinned via `PYTHON_VERSION` in `render.yaml`)
 - **Root Directory:** `backend`
 - **Build Command:** `pip install -r requirements.txt`
 - **Start Command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
@@ -72,14 +72,18 @@ A ready-to-use Blueprint is provided in [`render.yaml`](../render.yaml).
 
 | Variable | Example / Value | Notes |
 | :--- | :--- | :--- |
-| `ENV` | `prod` | Enforces strict non-dev settings |
+| `PYTHON_VERSION` | `3.11.9` | Pinned in `render.yaml` to avoid wheel compilation drift |
+| `ENV` | `prod` | Enforces strict non-dev settings & disables public `/docs` |
 | `TZ` | `Asia/Dhaka` | Default clinic/mealtime timezone |
-| `DATABASE_URL` | `postgresql+psycopg://...` | Supabase Session Pooler URI (SQLite is rejected by `config.py`) |
+| `DATABASE_URL` | `postgresql+psycopg://...` | Supabase Session Pooler URI (`pool_size=3`, SQLite rejected) |
 | `GROQ_API_KEY` | `gsk_...` | Groq Llama/GPT-OSS + Whisper STT |
 | `GEMINI_API_KEY` | `AIza...` | Gemini `gemini-3.5-flash` vision for prescriptions |
-| `LLM_MODEL` | `openai/gpt-oss-120b` | Language model ID |
+| `LLM_MODEL` | `openai/gpt-oss-120b` | Bounded MCP agent reasoning model (`reasoning_effort=low`) |
+| `LLM_FAST_MODEL` | `llama-3.1-8b-instant` | Fast low-token model for `parse_events` and `menu_explain` |
 | `STT_MODEL` | `whisper-large-v3` | Speech-to-text model ID |
 | `VISION_MODEL` | `gemini-3.5-flash` | Prescription extraction model ID (`ISSUE-007`) |
+| `GROQ_DAILY_TOKEN_CAP` | `150000` | In-memory daily token guard + 15m cooldown on HTTP 429 |
+| `ALLOW_DEMO_TICK_OVERRIDE` | `false` | Set `true` temporarily only during live demo time-simulation |
 | `CORS_ORIGINS` | `https://harbor-web.onrender.com` | **Must match exact frontend origin** (comma-separated if multiple, no trailing slash) |
 | `SESSION_SECRET` | `<32+ char random>` | Signs caregiver auth & HMAC `confirmation_token` |
 | `TICK_SECRET` | `<24+ char random>` | Authorizes `POST /internal/tick` via `X-Tick-Secret` |
@@ -92,7 +96,7 @@ A ready-to-use Blueprint is provided in [`render.yaml`](../render.yaml).
 
 > **CRITICAL (`NEXT_PUBLIC_*` Build-Time Baking):** Next.js inlines `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_VAPID_PUBLIC_KEY` during `npm run build`, **not** at container boot. Deploy `harbor-api` first to get its exact `https://...onrender.com` URL, set both `NEXT_PUBLIC_*` env vars on `harbor-web`, and then trigger the `harbor-web` build (re-trigger a build with cleared cache whenever either variable changes).
 
-- **Runtime:** Node `20+`
+- **Runtime:** Node `22.14.0` (pinned via `NODE_VERSION` in `render.yaml`)
 - **Root Directory:** `frontend`
 - **Build Command:** `npm ci && npm run build` (`package.json` already uses `next build --webpack`)
 - **Start Command:** `npm start`

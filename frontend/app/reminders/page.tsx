@@ -6,6 +6,7 @@ import { Bell, Copy, ExternalLink, Pill, RefreshCw } from "lucide-react";
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
 import { Badge, Button, Card, Input, Skeleton, useToast } from "@/components/ui";
 import { ApiError, CaregiverDosesDashboardResponse, harborApi } from "@/lib/api";
+import { getDhakaTodayISO } from "@/lib/date";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
@@ -14,7 +15,7 @@ export default function RemindersDashboardPage() {
   const { session } = useSession();
   const { showToast } = useToast();
 
-  const [forDate, setForDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [forDate, setForDate] = useState(() => getDhakaTodayISO());
   const [data, setData] = useState<CaregiverDosesDashboardResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);

@@ -438,7 +438,7 @@
     "modeMember": "Household Member",
     "modeCustom": "Custom Test Profile",
     "memberSelectLabel": "Select Member",
-    "recipeSelectLabel": "Select Recipe (40 Seeded Dishes)",
+    "recipeSelectLabel": "Select Recipe ({count} Dishes)",
     "customNameLabel": "Profile Name",
     "customAgeLabel": "Age Group",
     "customDrugsLabel": "Confirmed Drug Classes",

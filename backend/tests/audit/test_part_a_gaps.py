@@ -69,8 +69,11 @@ def test_explicit_prompt_injection_and_privacy_guarantees(client: TestClient, db
         def __init__(self):
             super().__init__(groq_api_key="x", gemini_api_key="x")
 
-        def call_gemini_vision(self, **kwargs):
+        def call_gemini_vision_json(self, **kwargs):
             called_count["vision"] += 1
+            return None
+
+        def call_groq_json(self, **kwargs):
             return None
 
         def transcribe_audio(self, *args, **kwargs):

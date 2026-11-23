@@ -126,7 +126,11 @@ async def suggest_menu(
     llm_client: LLMClient = Depends(get_llm_client),
     mcp_server: FastMCP = Depends(get_mcp_server),
 ):
-    budget = hh.monthly_budget_bdt or 15000
+    budget = (
+        hh.monthly_budget_bdt
+        if hh.monthly_budget_bdt is not None
+        else get_settings().default_monthly_budget_bdt
+    )
     if payload.use_agent and llm_client.groq_api_key:
         out = await run_menu_planning_agent(
             db=db,
@@ -146,7 +150,7 @@ async def suggest_menu(
             monthly_budget_bdt=budget,
         )
         cands_by_id = {c.recipe.id: c for c in det["shared"].candidates}
-        if llm_client.groq_api_key and payload.use_agent:
+        if payload.use_llm_explain and llm_client.groq_api_key and det["top_3"]:
             exp_res = generate_grounded_explanations(
                 det["top_3"],
                 cands_by_id,
@@ -181,7 +185,10 @@ async def suggest_menu(
     return response_payload
 
 
-@router.post("/review")
+@router.post(
+    "/review",
+    dependencies=[Depends(enforce_rate_limit("menu_review", max_calls=15, window_seconds=60))],
+)
 async def review_menu(
     payload: MenuReviewRequest,
     hh: Household = Depends(get_current_household),
@@ -224,7 +231,12 @@ async def review_menu(
 
     db.commit()
 
-    suggest_req = MenuSuggestRequest(for_date=payload.for_date, meal=payload.meal, use_agent=bool(llm_client.groq_api_key))
+    suggest_req = MenuSuggestRequest(
+        for_date=payload.for_date,
+        meal=payload.meal,
+        use_agent=payload.use_agent,
+        use_llm_explain=payload.use_llm_explain,
+    )
     return await suggest_menu(suggest_req, hh=hh, db=db, llm_client=llm_client, mcp_server=mcp_server)
 
 
@@ -270,7 +282,7 @@ def mark_menu_cooked(
         MenuSuggestion(
             household_id=hh.id,
             for_date=payload.for_date,
-            meal="dinner",
+            meal=payload.meal,
             payload={"cooked_recipe_key": recipe.key, "servings": payload.servings},
             validated=True,
             used_template=True,

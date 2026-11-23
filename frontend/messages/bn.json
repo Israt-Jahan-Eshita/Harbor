@@ -438,7 +438,7 @@
     "modeMember": "পরিবারের সদস্য",
     "modeCustom": "পরীক্ষামূলক প্রোফাইল",
     "memberSelectLabel": "সদস্য বেছে নিন",
-    "recipeSelectLabel": "রেসিপি বেছে নিন (৪০টি সিড পদ)",
+    "recipeSelectLabel": "রেসিপি বেছে নিন ({count}টি পদ)",
     "customNameLabel": "প্রোফাইলের নাম",
     "customAgeLabel": "বয়স গ্রুপ",
     "customDrugsLabel": "নিশ্চিতকৃত ওষুধ শ্রেণি",

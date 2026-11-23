@@ -8,6 +8,8 @@ services:
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /healthz
     envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
       - key: ENV
         value: prod
       - key: TZ
@@ -20,10 +22,16 @@ services:
         sync: false
       - key: LLM_MODEL
         value: openai/gpt-oss-120b
+      - key: LLM_FAST_MODEL
+        value: llama-3.1-8b-instant
       - key: STT_MODEL
         value: whisper-large-v3
       - key: VISION_MODEL
         value: gemini-3.5-flash
+      - key: GROQ_DAILY_TOKEN_CAP
+        value: "150000"
+      - key: ALLOW_DEMO_TICK_OVERRIDE
+        value: "false"
       - key: CORS_ORIGINS
         sync: false
       - key: SESSION_SECRET
@@ -45,6 +53,8 @@ services:
     buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
+      - key: NODE_VERSION
+        value: "22.14.0"
       - key: NEXT_PUBLIC_API_URL
         sync: false
       - key: NEXT_PUBLIC_VAPID_PUBLIC_KEY

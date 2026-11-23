@@ -1,7 +1,5 @@
-const CACHE_NAME = "harbor-shell-v1";
+const CACHE_NAME = "harbor-shell-v2";
 const PRECACHE_URLS = [
-  "/",
-  "/dashboard",
   "/manifest.json",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",
@@ -32,12 +30,17 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // Network-first with retry and exact-route cache fallback (never serve '/' HTML for another route)
+  // Cache only static assets, manifest, icons, and public patient view shell
   event.respondWith(
     fetch(req)
       .catch(() => fetch(req.url))
       .then((resp) => {
-        if (resp && resp.ok && (req.mode === "navigate" || url.pathname.startsWith("/_next/static") || url.pathname.startsWith("/icons"))) {
+        const isStatic =
+          url.pathname.startsWith("/_next/static") ||
+          url.pathname.startsWith("/icons") ||
+          url.pathname === "/manifest.json" ||
+          url.pathname.startsWith("/patient/");
+        if (resp && resp.ok && isStatic) {
           const copy = resp.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => undefined);
         }

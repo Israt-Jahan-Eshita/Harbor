@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import time
 import uuid
@@ -115,25 +116,34 @@ def get_current_household(
 
 def verify_tick_secret(x_tick_secret: str | None = Header(default=None, alias="X-Tick-Secret")) -> None:
     expected = get_settings().tick_secret
-    if not x_tick_secret or x_tick_secret != expected:
+    if not x_tick_secret or not hmac.compare_digest(x_tick_secret, expected):
         raise AppError("INVALID_TICK_SECRET", "Invalid X-Tick-Secret header.", status_code=401)
 
 
 def enforce_rate_limit(bucket: str, max_calls: int = 30, window_seconds: int = 60):
-    """FastAPI dependency enforcing sliding-window rate limits on LLM endpoints."""
+    """FastAPI dependency enforcing sliding-window rate limits with stale-key pruning."""
 
     def _dependency(request: Request) -> None:
         client_host = request.client.host if request.client else "unknown"
         auth = request.headers.get("authorization", "")[-16:]
         key = f"{bucket}:{client_host}:{auth}"
         now = time.monotonic()
+
+        if len(_RATE_WINDOWS) > 5000:
+            stale_keys = [k for k, v in _RATE_WINDOWS.items() if not v or now - v[-1] > 3600]
+            for sk in stale_keys:
+                _RATE_WINDOWS.pop(sk, None)
+
         dq = _RATE_WINDOWS[key]
         while dq and now - dq[0] > window_seconds:
             dq.popleft()
+        if not dq:
+            _RATE_WINDOWS.pop(key, None)
+            dq = _RATE_WINDOWS[key]
         if len(dq) >= max_calls:
             raise AppError(
                 "RATE_LIMITED",
-                "Too many AI requests; please wait a moment and try again.",
+                "Too many requests; please wait a moment and try again.",
                 status_code=429,
             )
         dq.append(now)

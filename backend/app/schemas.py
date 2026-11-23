@@ -4,8 +4,16 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from typing import Any, Literal
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, Field
+
+from app.config import get_settings
+
+
+def dhaka_today() -> date:
+    """Return today's calendar date in the household's configured timezone (Asia/Dhaka)."""
+    return datetime.now(ZoneInfo(get_settings().tz)).date()
 
 
 class MealTimesSchema(BaseModel):
@@ -141,23 +149,27 @@ class StockAdjustRequest(BaseModel):
 
 
 class MenuSuggestRequest(BaseModel):
-    for_date: date = Field(default_factory=date.today)
+    for_date: date = Field(default_factory=dhaka_today)
     meal: Literal["breakfast", "lunch", "dinner"] = "dinner"
-    use_agent: bool = True
+    use_agent: bool = False
+    use_llm_explain: bool = False
 
 
 class MenuReviewRequest(BaseModel):
-    for_date: date = Field(default_factory=date.today)
+    for_date: date = Field(default_factory=dhaka_today)
     meal: Literal["breakfast", "lunch", "dinner"] = "dinner"
     guest_count: int = Field(default=0, ge=0, le=50)
     guest_restrictions: list[str] = Field(default_factory=list)
     away_member_ids: list[str] = Field(default_factory=list)
+    use_agent: bool = False
+    use_llm_explain: bool = False
 
 
 class MenuCookedRequest(BaseModel):
     recipe_id: str = Field(..., min_length=1)
     servings: int = Field(..., ge=1, le=50)
-    for_date: date = Field(default_factory=date.today)
+    for_date: date = Field(default_factory=dhaka_today)
+    meal: Literal["breakfast", "lunch", "dinner"] = "dinner"
 
 
 class BazarBuildRequest(BaseModel):

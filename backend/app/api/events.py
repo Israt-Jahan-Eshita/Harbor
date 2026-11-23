@@ -40,6 +40,20 @@ def get_llm_client() -> LLMClient:
     return LLMClient()
 
 
+async def _read_upload_limited(upload: object, max_bytes: int) -> bytes:
+    chunks: list[bytes] = []
+    total = 0
+    while True:
+        chunk = await upload.read(65536)  # type: ignore[attr-defined]
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise AppError("PAYLOAD_TOO_LARGE", "Audio upload exceeds 10 MB limit.", status_code=413)
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 @router.post(
     "/parse",
     dependencies=[Depends(enforce_rate_limit("events_parse", max_calls=25, window_seconds=60))],
@@ -66,8 +80,8 @@ async def parse_events_endpoint(
                     "Caregiver consent is required before uploading voice recordings to third-party AI APIs.",
                     status_code=403,
                 )
-            audio_bytes = await audio_field.read()
-            if not audio_bytes or len(audio_bytes) > MAX_AUDIO_BYTES:
+            audio_bytes = await _read_upload_limited(audio_field, MAX_AUDIO_BYTES)
+            if not audio_bytes:
                 raise AppError("INVALID_AUDIO", "Audio file must be non-empty and under 10 MB.", status_code=400)
             filename = getattr(audio_field, "filename", None) or "voice.webm"
             try:
