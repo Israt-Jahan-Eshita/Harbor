@@ -122,7 +122,7 @@ def create_app() -> FastAPI:
     application.include_router(engine_api.router)
     application.include_router(eval_api.router)
 
-    @application.get("/healthz", tags=["system"])
+    @application.api_route("/healthz", methods=["GET", "HEAD"], tags=["system"])
     def healthz(db: Session = Depends(get_db)):
         """Check API liveness and PostgreSQL database connectivity."""
         try:
