@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from app.core.prices import get_price_estimate
 from app.core.scoring import score_dishes
+from app.core.shared_pot import find_shared_pot_dishes
 from app.core.types import (
+    DietPresetData,
+    DrugFoodRuleData,
     HouseholdCandidate,
     IngredientData,
+    MedicineData,
+    MemberData,
     RecipeData,
     RecipeIngredientData,
     RuleContext,
     StockItemState,
 )
+from app.seed.validate_seed import load_json
 
 
 def test_price_estimate_priority_and_agripricebd() -> None:
@@ -113,3 +119,79 @@ def test_scoring_repeat_penalty_expiry_season_and_weights() -> None:
         weights={"stock_fit": 0.0, "expiry_bonus": 0.0, "season_bonus": 0.0, "health_fit": 0.0, "taste": 1.0, "price_fit": 0.0, "repeat_penalty": 0.0},
     )
     assert ranked_custom[0].recipe.key == "jhinge_dish"
+
+
+def test_meal_slot_differentiation_and_daily_date_rotation() -> None:
+    """Breakfast, lunch, and dinner return distinct dish types, and changing dates rotates Top 3."""
+    ingredients_raw = load_json("ingredients.json")["ingredients"]
+    rules_raw = load_json("rules.json")["rules"]
+    presets_raw = load_json("diet_presets.json")["presets"]
+    recipes_raw = load_json("recipes.json")["recipes"]
+    demo_raw = load_json("demo_household.json")
+
+    ctx = RuleContext(
+        ingredients={ing["key"]: IngredientData(**ing) for ing in ingredients_raw},
+        drug_food_rules=[DrugFoodRuleData(**r) for r in rules_raw],
+        diet_presets=[DietPresetData(**p) for p in presets_raw],
+    )
+    recipes = [
+        RecipeData(
+            id=r["key"],
+            key=r["key"],
+            name_bn=r["name_bn"],
+            name_en=r["name_en"],
+            servings_base=r["servings_base"],
+            ingredients=[RecipeIngredientData(**ri) for ri in r["ingredients"]],
+            steps_bn=r["steps_bn"],
+            split_step_bn=r.get("split_step_bn"),
+            split_removes=r.get("split_removes", []),
+            taste_score=r["taste_score"],
+            category=r["category"],
+            est_cost_bdt=r.get("est_cost_bdt"),
+        )
+        for r in recipes_raw
+    ]
+    members = [
+        MemberData(
+            id=f"m-{i}",
+            name=m["name"],
+            role=m["role"],
+            age_group=m["age_group"],
+            conditions=m["conditions"],
+            allergies=m["allergies"],
+            diet_presets=m["diet_presets"],
+            medicines=[MedicineData(id=f"med-{i}-{j}", **med) for j, med in enumerate(m.get("medicines", []))],
+        )
+        for i, m in enumerate(demo_raw["members"])
+    ]
+    stock = {
+        item["ingredient_key"]: StockItemState(
+            ingredient_key=item["ingredient_key"],
+            raw_qty=float(item["qty_base"]),
+            qty_base=float(item["qty_base"]),
+            near_expiry=False,
+        )
+        for item in demo_raw["initial_stock"]
+    }
+
+    shared = find_shared_pot_dishes(members, recipes, ctx, date(2026, 11, 24), meal="dinner")
+
+    bf_24 = [s.recipe.key for s in score_dishes(shared.candidates, stock, ctx, 11, meal="breakfast", for_date=date(2026, 11, 24))[:3]]
+    ln_24 = [s.recipe.key for s in score_dishes(shared.candidates, stock, ctx, 11, meal="lunch", for_date=date(2026, 11, 24))[:3]]
+    dn_24 = [s.recipe.key for s in score_dishes(shared.candidates, stock, ctx, 11, meal="dinner", for_date=date(2026, 11, 24))[:3]]
+
+    # Breakfast, lunch, and dinner on the same date must not be identical
+    assert bf_24 != ln_24
+    assert ln_24 != dn_24
+    assert bf_24 != dn_24
+
+    # Breakfast top 3 must never include heavy fish or meat curries
+    recipes_by_key = {r.key: r for r in recipes}
+    assert all(recipes_by_key[k].category not in ("fish", "meat") for k in bf_24)
+
+    # Changing the date (Nov 24 vs Nov 25 vs Dec 1) rotates the Top 3 menu
+    dn_25 = [s.recipe.key for s in score_dishes(shared.candidates, stock, ctx, 11, meal="dinner", for_date=date(2026, 11, 25))[:3]]
+    dn_dec1 = [s.recipe.key for s in score_dishes(shared.candidates, stock, ctx, 12, meal="dinner", for_date=date(2026, 12, 1))[:3]]
+    assert dn_24 != dn_25
+    assert dn_24 != dn_dec1
+    assert dn_25 != dn_dec1

@@ -155,6 +155,8 @@ def run_deterministic_menu_pipeline(
         recent_cooked_recipe_keys=recent,
         user_price_observations=user_prices,
         weights=settings.score_weights,
+        meal=meal,
+        for_date=for_date,
     )
     top_3 = ranked[:3]
     cands_by_id = {c.recipe.id: c for c in shared.candidates}

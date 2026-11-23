@@ -234,6 +234,8 @@ def create_mcp_server(session_factory: sessionmaker = SessionLocal) -> FastMCP:
                 recent_cooked_recipe_keys=recent,
                 user_price_observations=user_prices,
                 weights=get_settings().score_weights,
+                meal=meal,
+                for_date=target_date,
             )
             return {"ranked": [s.model_dump(mode="json") for s in scored]}
 

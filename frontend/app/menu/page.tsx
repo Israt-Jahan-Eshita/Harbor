@@ -75,13 +75,13 @@ export default function MenuPage() {
     };
   }, [session, locale]);
 
-  async function handleSuggest() {
+  async function runSuggest(targetDate: string, targetMeal: MealSlot, targetUseAgent: boolean) {
     if (!session) return;
     setLoading(true);
     setErrorMsg(null);
     try {
       const res = await harborApi.suggestMenu(
-        { for_date: forDate, meal, use_agent: useAgent },
+        { for_date: targetDate, meal: targetMeal, use_agent: targetUseAgent },
         session.token,
         locale,
       );
@@ -93,6 +93,10 @@ export default function MenuPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleSuggest() {
+    await runSuggest(forDate, meal, useAgent);
   }
 
   async function handleApplyReview(e: React.FormEvent) {
@@ -158,7 +162,13 @@ export default function MenuPage() {
             label={t("menu.dateLabel")}
             type="date"
             value={forDate}
-            onChange={(e) => setForDate(e.target.value)}
+            onChange={(e) => {
+              const nextDate = e.target.value;
+              setForDate(nextDate);
+              if (menuData && !useAgent && nextDate) {
+                void runSuggest(nextDate, meal, false);
+              }
+            }}
             data-testid="menu-date-input"
           />
           <div className="space-y-1.5">
@@ -167,7 +177,13 @@ export default function MenuPage() {
             </span>
             <Tabs
               value={meal}
-              onChange={(m) => setMeal(m as MealSlot)}
+              onChange={(m) => {
+                const nextMeal = m as MealSlot;
+                setMeal(nextMeal);
+                if (menuData && !useAgent) {
+                  void runSuggest(forDate, nextMeal, false);
+                }
+              }}
               ariaLabel={t("menu.mealLabel")}
               options={[
                 { id: "breakfast", label: t("memberDetail.slots.breakfast") },
