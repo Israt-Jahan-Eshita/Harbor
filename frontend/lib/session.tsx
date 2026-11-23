@@ -60,11 +60,26 @@ function getSnapshot(): HarborSession | null {
     return null;
   }
   try {
-    cachedSession = JSON.parse(raw) as HarborSession;
+    const parsed = JSON.parse(raw) as Partial<HarborSession>;
+    if (
+      parsed &&
+      typeof parsed.householdId === "string" &&
+      parsed.householdId.length > 0 &&
+      typeof parsed.token === "string" &&
+      parsed.token.length > 0 &&
+      typeof parsed.accessCode === "string" &&
+      parsed.accessCode.length > 0
+    ) {
+      cachedSession = parsed as HarborSession;
+      return cachedSession;
+    }
+    window.localStorage.removeItem(STORAGE_KEY);
+    cachedRaw = null;
+    cachedSession = null;
   } catch {
     cachedSession = null;
   }
-  return cachedSession;
+  return null;
 }
 
 function getServerSnapshot(): HarborSession | null {
@@ -112,6 +127,12 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
 
   const clearSession = useCallback(() => {
     setSession(null);
+    if (typeof window !== "undefined" && "caches" in window) {
+      window.caches
+        .keys()
+        .then((keys) => Promise.all(keys.map((k) => window.caches.delete(k))))
+        .catch(() => undefined);
+    }
   }, [setSession]);
 
   const value = useMemo<SessionContextValue>(

@@ -6,22 +6,22 @@ export interface ContrastCheckRow {
 }
 
 export const LIGHT_CHECKS: ContrastCheckRow[] = [
-  { pair: "Primary Text / Background", fg: "#2B2621", bg: "#ECE6DB", minExpected: 4.5 },
-  { pair: "Muted Text / Background", fg: "#62584E", bg: "#ECE6DB", minExpected: 4.5 },
+  { pair: "Primary Text / Background", fg: "#241F1B", bg: "#F6F2EA", minExpected: 4.5 },
+  { pair: "Muted Text / Background", fg: "#5F554B", bg: "#F6F2EA", minExpected: 4.5 },
   { pair: "On-Accent / Terracotta", fg: "#FFFDF9", bg: "#A84925", minExpected: 4.5 },
-  { pair: "Terracotta / Background", fg: "#A84925", bg: "#ECE6DB", minExpected: 4.5 },
-  { pair: "On-Saffron / Saffron", fg: "#2B2621", bg: "#D9A441", minExpected: 4.5 },
+  { pair: "Terracotta / Background", fg: "#A84925", bg: "#F6F2EA", minExpected: 4.5 },
+  { pair: "On-Saffron / Saffron", fg: "#241F1B", bg: "#D9A441", minExpected: 4.5 },
   { pair: "On-Danger / Brick", fg: "#FFFDF9", bg: "#B3402F", minExpected: 4.5 },
   { pair: "On-OK / Deep Gold", fg: "#FFFDF9", bg: "#785B17", minExpected: 4.5 },
 ];
 
 export const DARK_CHECKS: ContrastCheckRow[] = [
-  { pair: "Primary Text / Background", fg: "#EFE7DA", bg: "#1E1A16", minExpected: 4.5 },
-  { pair: "Muted Text / Surface", fg: "#B8AD9E", bg: "#26211C", minExpected: 4.5 },
-  { pair: "On-Accent / Terracotta", fg: "#1E1A16", bg: "#E07A52", minExpected: 4.5 },
-  { pair: "On-Saffron / Saffron", fg: "#1E1A16", bg: "#E8B04E", minExpected: 4.5 },
-  { pair: "On-Danger / Brick", fg: "#1E1A16", bg: "#E97866", minExpected: 4.5 },
-  { pair: "On-OK / Gold", fg: "#1E1A16", bg: "#D9B25A", minExpected: 4.5 },
+  { pair: "Primary Text / Background", fg: "#F2EBE0", bg: "#181411", minExpected: 4.5 },
+  { pair: "Muted Text / Surface", fg: "#BEB3A4", bg: "#211C17", minExpected: 4.5 },
+  { pair: "On-Accent / Terracotta", fg: "#181411", bg: "#E07A52", minExpected: 4.5 },
+  { pair: "On-Saffron / Saffron", fg: "#181411", bg: "#E8B04E", minExpected: 4.5 },
+  { pair: "On-Danger / Brick", fg: "#181411", bg: "#E97866", minExpected: 4.5 },
+  { pair: "On-OK / Gold", fg: "#181411", bg: "#D9B25A", minExpected: 4.5 },
 ];
 
 function linearizeChannel(c: number): number {

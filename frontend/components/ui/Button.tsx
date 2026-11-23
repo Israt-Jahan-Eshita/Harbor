@@ -19,7 +19,7 @@ export function Button({
   ...rest
 }: ButtonProps) {
   const base =
-    "inline-flex min-h-[48px] items-center justify-center gap-2 rounded-[18px] px-5 py-3 text-base font-semibold select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-150";
+    "inline-flex min-h-[42px] items-center justify-center gap-2 rounded-[12px] px-4 py-2 text-sm font-semibold select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150";
   const widthClass = fullWidth ? "w-full" : "";
 
   let variantClass = "";
@@ -39,7 +39,7 @@ export function Button({
       variantStyle = { color: "var(--text)" };
       break;
     case "danger":
-      variantClass = "border border-[var(--danger)] shadow-md active:translate-y-[1px]";
+      variantClass = "border border-[var(--danger)] shadow-sm active:translate-y-[1px]";
       variantStyle = {
         backgroundColor: "var(--danger)",
         color: "var(--on-danger)",
@@ -58,4 +58,3 @@ export function Button({
     </button>
   );
 }
-

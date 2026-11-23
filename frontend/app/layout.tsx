@@ -1,20 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Bengali, Plus_Jakarta_Sans } from "next/font/google";
+import { DM_Sans, Fraunces, Hind_Siliguri, JetBrains_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/AppShell";
 import { Providers } from "@/lib/providers";
 import "./globals.css";
 
-const notoSansBengali = Noto_Sans_Bengali({
+const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-bn",
   display: "swap",
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-latin",
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -56,7 +70,7 @@ export default function RootLayout({
     <html
       lang="bn"
       data-theme="light"
-      className={`${notoSansBengali.variable} ${plusJakarta.variable}`}
+      className={`${hindSiliguri.variable} ${dmSans.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -70,4 +84,3 @@ export default function RootLayout({
     </html>
   );
 }
-

@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, Clock, Languages, Palette, Sparkles } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Bell, Clock, Languages, LogOut, Palette, Shield, Sparkles } from "lucide-react";
 import { Button, Card, Input, Tabs, Toggle, useToast } from "@/components/ui";
 import { ApiError, harborApi } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
@@ -10,16 +12,24 @@ import { useSession } from "@/lib/session";
 import { ThemeMode, useTheme } from "@/lib/theme";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { locale, setLocale, formatNumber, t } = useI18n();
   const { themeMode, setThemeMode } = useTheme();
-  const { session, setSession, updateMealTimes } = useSession();
+  const { session, setSession, updateMealTimes, clearSession } = useSession();
   const { showToast } = useToast();
 
-  const [breakfast, setBreakfast] = useState(session?.mealTimes.breakfast || "08:00");
-  const [lunch, setLunch] = useState(session?.mealTimes.lunch || "13:30");
-  const [dinner, setDinner] = useState(session?.mealTimes.dinner || "21:00");
+  const [mealOverrides, setMealOverrides] = useState<{
+    breakfast?: string;
+    lunch?: string;
+    dinner?: string;
+  }>({});
+  const breakfast = mealOverrides.breakfast ?? session?.mealTimes.breakfast ?? "08:00";
+  const lunch = mealOverrides.lunch ?? session?.mealTimes.lunch ?? "13:30";
+  const dinner = mealOverrides.dinner ?? session?.mealTimes.dinner ?? "21:00";
+
   const [pushEnabled, setPushEnabled] = useState(false);
-  const [consent, setConsent] = useState(session?.consentGiven ?? false);
+  const [consentOverride, setConsentOverride] = useState<boolean | null>(null);
+  const consent = consentOverride ?? session?.consentGiven ?? false;
   const [loadingDemo, setLoadingDemo] = useState(false);
   const [savingMeals, setSavingMeals] = useState(false);
 
@@ -69,7 +79,7 @@ export default function SettingsPage() {
   }
 
   async function handleToggleConsent(next: boolean) {
-    setConsent(next);
+    setConsentOverride(next);
     if (session) {
       try {
         await harborApi.updateHouseholdSettings(
@@ -81,7 +91,7 @@ export default function SettingsPage() {
         setSession({ ...session, consentGiven: next });
         showToast(t("settings.savedToast"), "success");
       } catch (err) {
-        setConsent(!next);
+        setConsentOverride(!next);
         showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
       }
     }
@@ -100,6 +110,8 @@ export default function SettingsPage() {
         mealTimes: res.meal_times,
         monthlyBudgetBdt: res.monthly_budget_bdt,
       });
+      setMealOverrides({});
+      setConsentOverride(null);
       showToast(t("welcome.loginSuccess"), "success");
     } catch (err) {
       const msg =
@@ -113,25 +125,53 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6 harbor-reveal">
       <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: "var(--text)" }}>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
           {t("settings.title")}
         </h1>
-        <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           {t("settings.subtitle")}
         </p>
       </div>
 
+      {/* Account & Session Security */}
+      {session && (
+        <Card variant="raised" className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--ok)" }} aria-hidden="true" />
+            <div>
+              <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
+                {t("settings.accountTitle")}
+              </h2>
+              <p className="text-xs font-mono mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {session.householdName} · {t("settings.accountCodeLabel")}: {session.accessCode}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="danger"
+            onClick={() => {
+              clearSession();
+              router.push("/welcome?tab=login");
+            }}
+            data-testid="settings-signout-btn"
+          >
+            <LogOut className="h-4 w-4" aria-hidden="true" />
+            <span>{t("settings.signOutBtn")}</span>
+          </Button>
+        </Card>
+      )}
+
       {/* Language Switcher (Full-System EN <-> BN) */}
       <Card variant="raised" className="space-y-4">
         <div className="flex items-start gap-3">
-          <Languages className="h-5 w-5 shrink-0 mt-1" style={{ color: "var(--accent)" }} aria-hidden="true" />
+          <Languages className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
           <div className="space-y-1">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+            <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
               {t("settings.languageCardTitle")}
             </h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
               {t("settings.languageCardDesc")}
             </p>
           </div>
@@ -146,19 +186,19 @@ export default function SettingsPage() {
           ]}
         />
         <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-          {t("common.estimated")}: {formatNumber(1250)} BDT
+          {t("common.estimated")}: {formatNumber(1250)} {t("common.bdt")}
         </p>
       </Card>
 
       {/* Theme Mode */}
       <Card variant="raised" className="space-y-4">
         <div className="flex items-start gap-3">
-          <Palette className="h-5 w-5 shrink-0 mt-1" style={{ color: "var(--accent)" }} aria-hidden="true" />
+          <Palette className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
           <div className="space-y-1">
-            <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+            <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
               {t("settings.themeCardTitle")}
             </h2>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
               {t("settings.themeCardDesc")}
             </p>
           </div>
@@ -179,35 +219,35 @@ export default function SettingsPage() {
       <Card variant="raised">
         <form onSubmit={handleSaveMealTimes} className="space-y-4">
           <div className="flex items-start gap-3">
-            <Clock className="h-5 w-5 shrink-0 mt-1" style={{ color: "var(--accent)" }} aria-hidden="true" />
+            <Clock className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
             <div className="space-y-1">
-              <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+              <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
                 {t("settings.mealTimesTitle")}
               </h2>
-              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
                 {t("settings.mealTimesDesc")}
               </p>
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3">
             <Input
               label={t("settings.breakfast")}
               type="time"
               value={breakfast}
-              onChange={(e) => setBreakfast(e.target.value)}
+              onChange={(e) => setMealOverrides((p) => ({ ...p, breakfast: e.target.value }))}
             />
             <Input
               label={t("settings.lunch")}
               type="time"
               value={lunch}
-              onChange={(e) => setLunch(e.target.value)}
+              onChange={(e) => setMealOverrides((p) => ({ ...p, lunch: e.target.value }))}
             />
             <Input
               label={t("settings.dinner")}
               type="time"
               value={dinner}
-              onChange={(e) => setDinner(e.target.value)}
+              onChange={(e) => setMealOverrides((p) => ({ ...p, dinner: e.target.value }))}
             />
           </div>
 
@@ -221,7 +261,7 @@ export default function SettingsPage() {
       <Card variant="raised" className="space-y-4">
         <div className="flex items-center gap-2.5">
           <Bell className="h-5 w-5" style={{ color: "var(--accent)" }} aria-hidden="true" />
-          <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+          <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
             {t("settings.notificationsTitle")}
           </h2>
         </div>
@@ -243,12 +283,12 @@ export default function SettingsPage() {
       {/* Demo Household Loader */}
       <Card variant="glass" className="space-y-3">
         <div className="flex items-center gap-2.5">
-          <Sparkles className="h-5 w-5" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
-          <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+          <Sparkles className="h-4 w-4" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
+          <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
             {t("settings.demoTitle")}
           </h2>
         </div>
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
           {t("settings.demoDesc")}
         </p>
         <Button
@@ -260,7 +300,28 @@ export default function SettingsPage() {
           {loadingDemo ? t("common.loading") : t("settings.demoButton")}
         </Button>
       </Card>
+
+      {/* Discreet Transparency Links (Kept out of consumer sidebar) */}
+      <div className="pt-2 border-t border-[var(--border-subtle)] space-y-2 text-xs" style={{ color: "var(--text-muted)" }}>
+        <p className="font-semibold" style={{ color: "var(--text)" }}>
+          {t("settings.transparencyTitle")}
+        </p>
+        <p>{t("settings.transparencyDesc")}</p>
+        <div className="flex flex-wrap gap-4 pt-0.5">
+          <Link href="/how-it-works" className="underline hover:text-[var(--accent)]">
+            {t("nav.howItWorks")}
+          </Link>
+          <Link href="/engine" className="underline hover:text-[var(--accent)]">
+            {t("nav.engine")}
+          </Link>
+          <Link href="/eval" className="underline hover:text-[var(--accent)]">
+            {t("nav.eval")}
+          </Link>
+          <Link href="/styleguide" className="underline hover:text-[var(--accent)]">
+            {t("nav.styleguide")}
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
-

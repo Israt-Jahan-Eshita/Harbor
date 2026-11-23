@@ -26,7 +26,7 @@ export function Toggle({
       <div className="space-y-0.5">
         <label
           htmlFor={id}
-          className="block text-base font-medium cursor-pointer"
+          className="block text-sm font-medium cursor-pointer"
           style={{ color: "var(--text)" }}
         >
           {label}
@@ -46,17 +46,17 @@ export function Toggle({
         disabled={disabled}
         data-testid={testId}
         onClick={() => onChange(!checked)}
-        className="neu-inset relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors disabled:opacity-50"
+        className="neu-inset relative inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full p-1 transition-colors disabled:opacity-50"
         style={{
           backgroundColor: checked ? "var(--accent)" : "var(--surface)",
         }}
       >
         <span
-          className="inline-block h-6 w-6 rounded-full shadow-md transition-transform duration-150"
+          className="inline-block h-5 w-5 rounded-full shadow-sm transition-transform duration-150"
           style={{
             backgroundColor: "var(--surface-elevated)",
             border: "1px solid var(--border-strong)",
-            transform: checked ? "translateX(24px)" : "translateX(0px)",
+            transform: checked ? "translateX(20px)" : "translateX(0px)",
           }}
         />
       </button>

@@ -1,23 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
-import { KeyRound, ShieldAlert, Sparkles } from "lucide-react";
+import React, { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Eye, EyeOff, KeyRound, Lock, ShieldAlert, Sparkles } from "lucide-react";
 import { Button, Card, Input, Tabs, useToast } from "@/components/ui";
 import { ApiError, harborApi } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 
-export default function WelcomePage() {
+function WelcomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams?.get("tab") === "login" ? "login" : "create";
+
   const { locale, t } = useI18n();
   const { setSession } = useSession();
   const { showToast } = useToast();
 
-  const [tab, setTab] = useState("create");
+  const [tab, setTab] = useState<"create" | "login">(initialTab);
   const [householdName, setHouseholdName] = useState("");
   const [pin, setPin] = useState("");
-  const [budget, setBudget] = useState("14000");
+  const [pinConfirm, setPinConfirm] = useState("");
+  const [showPin, setShowPin] = useState(false);
+  const [budget, setBudget] = useState("15000");
   const [consentGiven, setConsentGiven] = useState(false);
 
   const [loginCode, setLoginCode] = useState("");
@@ -28,6 +33,11 @@ export default function WelcomePage() {
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
     setErrorMsg(null);
+    const trimmedPin = pin.trim();
+    if (trimmedPin.length < 4 || trimmedPin.length > 8 || trimmedPin !== pinConfirm.trim()) {
+      setErrorMsg(t("welcome.pinMismatch"));
+      return;
+    }
     if (!consentGiven) {
       setErrorMsg(t("welcome.consentRequired"));
       return;
@@ -37,7 +47,7 @@ export default function WelcomePage() {
       const res = await harborApi.createHousehold(
         {
           name: householdName.trim(),
-          pin: pin.trim(),
+          pin: trimmedPin,
           consent_given: consentGiven,
           meal_times: { breakfast: "08:00", lunch: "13:30", dinner: "21:00" },
           monthly_budget_bdt: budget ? Number(budget) : null,
@@ -95,9 +105,11 @@ export default function WelcomePage() {
     } catch (err) {
       const msg =
         err instanceof ApiError
-          ? err.status === 404 || err.status === 0
-            ? t("common.comingSoon")
-            : err.message
+          ? err.status === 429
+            ? err.message
+            : err.status === 404 || err.status === 0
+              ? t("common.comingSoon")
+              : err.message
           : t("common.errorUnexpected");
       setErrorMsg(msg);
       showToast(msg, "error");
@@ -106,13 +118,38 @@ export default function WelcomePage() {
     }
   }
 
+  async function handleLoadDemo() {
+    setSubmitting(true);
+    setErrorMsg(null);
+    try {
+      const res = await harborApi.seedDemoHousehold(locale);
+      setSession({
+        householdId: res.household_id,
+        householdName: res.name,
+        accessCode: res.access_code,
+        token: res.token,
+        consentGiven: res.consent_given,
+        mealTimes: res.meal_times,
+        monthlyBudgetBdt: res.monthly_budget_bdt,
+      });
+      showToast(`${t("welcome.loginSuccess")} (${res.access_code})`, "success");
+      router.push("/dashboard");
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
+      setErrorMsg(msg);
+      showToast(msg, "error");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
   return (
-    <div className="mx-auto max-w-xl space-y-6 py-4">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: "var(--text)" }}>
+    <div className="mx-auto max-w-md space-y-6 py-4 sm:py-8 harbor-reveal">
+      <div className="space-y-1.5 text-center">
+        <h1 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
           {t("welcome.title")}
         </h1>
-        <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
+        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
           {t("welcome.subtitle")}
         </p>
       </div>
@@ -120,7 +157,7 @@ export default function WelcomePage() {
       <Tabs
         value={tab}
         onChange={(next) => {
-          setTab(next);
+          setTab(next as "create" | "login");
           setErrorMsg(null);
         }}
         ariaLabel={t("welcome.title")}
@@ -139,20 +176,52 @@ export default function WelcomePage() {
               value={householdName}
               onChange={(e) => setHouseholdName(e.target.value)}
               required
+              autoComplete="organization"
               data-testid="input-household-name"
             />
-            <Input
-              label={t("welcome.pinLabel")}
-              placeholder={t("welcome.pinPlaceholder")}
-              type="password"
-              inputMode="numeric"
-              minLength={4}
-              maxLength={8}
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              required
-              data-testid="input-household-pin"
-            />
+
+            <div className="space-y-3">
+              <div className="relative">
+                <Input
+                  label={t("welcome.pinLabel")}
+                  placeholder={t("welcome.pinPlaceholder")}
+                  type={showPin ? "text" : "password"}
+                  inputMode="numeric"
+                  minLength={4}
+                  maxLength={8}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  className="pr-11"
+                  data-testid="input-household-pin"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin((v) => !v)}
+                  aria-label={showPin ? t("welcome.hidePin") : t("welcome.showPin")}
+                  className="absolute right-2 top-[29px] flex h-8 w-8 items-center justify-center rounded-[8px] cursor-pointer hover:bg-[var(--surface-elevated)]"
+                  style={{ color: "var(--text-muted)" }}
+                >
+                  {showPin ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+                </button>
+              </div>
+
+              <Input
+                label={t("welcome.pinConfirmLabel")}
+                placeholder={t("welcome.pinConfirmPlaceholder")}
+                type={showPin ? "text" : "password"}
+                inputMode="numeric"
+                minLength={4}
+                maxLength={8}
+                value={pinConfirm}
+                onChange={(e) => setPinConfirm(e.target.value)}
+                required
+                autoComplete="new-password"
+                data-testid="input-household-pin-confirm"
+              />
+            </div>
+
             <Input
               label={t("welcome.budgetLabel")}
               type="number"
@@ -162,37 +231,37 @@ export default function WelcomePage() {
               data-testid="input-household-budget"
             />
 
-            {/* Privacy & Consent Card (Guardrail #10) */}
-            <Card variant="inset" className="space-y-3 p-4">
+            {/* Privacy & Consent Card */}
+            <div className="neu-inset p-3.5 space-y-2.5">
               <div className="flex items-start gap-2.5">
                 <ShieldAlert
-                  className="h-5 w-5 shrink-0 mt-0.5"
+                  className="h-4 w-4 shrink-0 mt-0.5"
                   style={{ color: "var(--accent)" }}
                   aria-hidden="true"
                 />
                 <div className="space-y-1">
-                  <h2 className="text-sm font-bold" style={{ color: "var(--text)" }}>
+                  <p className="text-xs font-bold" style={{ color: "var(--text)" }}>
                     {t("welcome.consentTitle")}
-                  </h2>
-                  <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+                  </p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "var(--text-muted)" }}>
                     {t("welcome.consentBody")}
                   </p>
                 </div>
               </div>
-              <label className="flex min-h-[48px] items-center gap-3 cursor-pointer text-sm font-semibold">
+              <label className="flex min-h-[40px] items-center gap-2.5 cursor-pointer text-xs font-semibold">
                 <input
                   type="checkbox"
                   checked={consentGiven}
                   onChange={(e) => setConsentGiven(e.target.checked)}
-                  className="h-5 w-5 accent-[var(--accent)]"
+                  className="h-4 w-4 shrink-0 accent-[var(--accent)]"
                   data-testid="consent-checkbox"
                 />
                 <span style={{ color: "var(--text)" }}>{t("welcome.consentCheckbox")}</span>
               </label>
-            </Card>
+            </div>
 
             {errorMsg && (
-              <p className="text-sm font-semibold" style={{ color: "var(--danger)" }} role="alert">
+              <p className="text-xs font-semibold" style={{ color: "var(--danger)" }} role="alert">
                 {errorMsg}
               </p>
             )}
@@ -217,21 +286,40 @@ export default function WelcomePage() {
               value={loginCode}
               onChange={(e) => setLoginCode(e.target.value)}
               required
+              autoComplete="username"
               data-testid="input-login-code"
             />
-            <Input
-              label={t("welcome.pinLabel")}
-              placeholder={t("welcome.pinPlaceholder")}
-              type="password"
-              inputMode="numeric"
-              value={loginPin}
-              onChange={(e) => setLoginPin(e.target.value)}
-              required
-              data-testid="input-login-pin"
-            />
+            <div className="relative">
+              <Input
+                label={t("welcome.pinLabel")}
+                placeholder={t("welcome.pinPlaceholder")}
+                type={showPin ? "text" : "password"}
+                inputMode="numeric"
+                value={loginPin}
+                onChange={(e) => setLoginPin(e.target.value)}
+                required
+                autoComplete="current-password"
+                className="pr-11"
+                data-testid="input-login-pin"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPin((v) => !v)}
+                aria-label={showPin ? t("welcome.hidePin") : t("welcome.showPin")}
+                className="absolute right-2 top-[29px] flex h-8 w-8 items-center justify-center rounded-[8px] cursor-pointer hover:bg-[var(--surface-elevated)]"
+                style={{ color: "var(--text-muted)" }}
+              >
+                {showPin ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
+              </button>
+            </div>
+
+            <div className="flex items-start gap-2 text-[11px]" style={{ color: "var(--text-muted)" }}>
+              <Lock className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "var(--ok)" }} aria-hidden="true" />
+              <span>{t("welcome.securityHint")}</span>
+            </div>
 
             {errorMsg && (
-              <p className="text-sm font-semibold" style={{ color: "var(--danger)" }} role="alert">
+              <p className="text-xs font-semibold" style={{ color: "var(--danger)" }} role="alert">
                 {errorMsg}
               </p>
             )}
@@ -250,45 +338,25 @@ export default function WelcomePage() {
         </Card>
       )}
 
-      <Card variant="glass" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <Sparkles className="h-5 w-5 shrink-0 mt-0.5" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
-          <div className="space-y-1 text-sm">
+      {/* Demo Household Access */}
+      <Card variant="glass" className="space-y-3">
+        <div className="flex items-start gap-2.5">
+          <Sparkles className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
+          <div className="space-y-1 text-xs">
             <p className="font-bold" style={{ color: "var(--text)" }}>
               {t("welcome.demoTipTitle")}
             </p>
-            <p style={{ color: "var(--text-muted)" }}>{t("welcome.demoTipBody")}</p>
+            <p className="leading-relaxed" style={{ color: "var(--text-muted)" }}>
+              {t("welcome.demoTipBody")}
+            </p>
           </div>
         </div>
         <Button
           variant="neu"
-          onClick={async () => {
-            setSubmitting(true);
-            setErrorMsg(null);
-            try {
-              const res = await harborApi.seedDemoHousehold(locale);
-              setSession({
-                householdId: res.household_id,
-                householdName: res.name,
-                accessCode: res.access_code,
-                token: res.token,
-                consentGiven: res.consent_given,
-                mealTimes: res.meal_times,
-                monthlyBudgetBdt: res.monthly_budget_bdt,
-              });
-              showToast(`${t("welcome.loginSuccess")} (${res.access_code})`, "success");
-              router.push("/dashboard");
-            } catch (err) {
-              const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
-              setErrorMsg(msg);
-              showToast(msg, "error");
-            } finally {
-              setSubmitting(false);
-            }
-          }}
+          fullWidth
+          onClick={handleLoadDemo}
           disabled={submitting}
           data-testid="welcome-quick-demo"
-          className="shrink-0"
         >
           {submitting ? t("common.loading") : t("welcome.demoQuickLoad")}
         </Button>
@@ -297,3 +365,10 @@ export default function WelcomePage() {
   );
 }
 
+export default function WelcomePage() {
+  return (
+    <Suspense fallback={<div className="mx-auto max-w-md py-12" />}>
+      <WelcomeContent />
+    </Suspense>
+  );
+}

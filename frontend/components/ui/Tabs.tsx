@@ -20,7 +20,7 @@ export function Tabs({ options, value, onChange, ariaLabel }: TabsProps) {
     <div
       role="tablist"
       aria-label={ariaLabel}
-      className="neu-inset grid gap-2 p-1.5 rounded-[20px]"
+      className="neu-inset grid gap-1.5 p-1 rounded-[13px]"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((opt) => {
@@ -33,8 +33,8 @@ export function Tabs({ options, value, onChange, ariaLabel }: TabsProps) {
             aria-selected={active}
             data-testid={opt["data-testid"]}
             onClick={() => onChange(opt.id)}
-            className={`min-h-[48px] rounded-[14px] px-4 py-2 text-sm sm:text-base font-bold cursor-pointer transition-all ${
-              active ? "skeu-button" : "hover:bg-[var(--surface)]"
+            className={`min-h-[38px] rounded-[10px] px-3 py-1.5 text-sm font-semibold cursor-pointer transition-all ${
+              active ? "skeu-button" : "hover:bg-[var(--surface-elevated)]"
             }`}
             style={active ? undefined : { color: "var(--text)" }}
           >
@@ -45,4 +45,3 @@ export function Tabs({ options, value, onChange, ariaLabel }: TabsProps) {
     </div>
   );
 }
-

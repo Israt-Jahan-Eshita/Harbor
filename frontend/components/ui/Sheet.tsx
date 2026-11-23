@@ -28,28 +28,28 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4"
-      style={{ backgroundColor: "rgba(17, 14, 11, 0.45)" }}
+      style={{ backgroundColor: "rgba(24, 20, 17, 0.48)" }}
       role="dialog"
       aria-modal="true"
       aria-label={title}
       onClick={onClose}
     >
       <div
-        className="glass w-full max-w-lg rounded-[24px] p-6 space-y-4 max-h-[85vh] overflow-y-auto"
+        className="glass harbor-sheet-in w-full max-w-lg rounded-[20px] p-5 space-y-4 max-h-[85vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
+          <h2 className="text-base font-bold" style={{ color: "var(--text)" }}>
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t("common.close")}
-            className="neu-raised-sm flex h-11 w-11 items-center justify-center rounded-full cursor-pointer"
+            className="neu-raised-sm flex h-10 w-10 items-center justify-center rounded-full cursor-pointer"
             style={{ color: "var(--text)" }}
           >
-            <X className="h-5 w-5" aria-hidden="true" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
         <div>{children}</div>
@@ -57,4 +57,3 @@ export function Sheet({ open, onClose, title, children }: SheetProps) {
     </div>
   );
 }
-

@@ -24,7 +24,7 @@ export function Input({
       {label && (
         <label
           htmlFor={inputId}
-          className="block text-sm font-semibold"
+          className="block text-xs font-semibold tracking-wide"
           style={{ color: "var(--text)" }}
         >
           {label}
@@ -32,7 +32,7 @@ export function Input({
       )}
       <input
         id={inputId}
-        className={`neu-inset w-full min-h-[48px] px-4 py-2.5 text-base placeholder:text-[var(--text-muted)] ${className}`.trim()}
+        className={`neu-inset w-full min-h-[42px] rounded-[11px] px-3.5 py-2 text-sm placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none ${className}`.trim()}
         style={{
           color: "var(--text)",
           borderColor: error ? "var(--danger)" : undefined,
@@ -53,4 +53,3 @@ export function Input({
     </div>
   );
 }
-

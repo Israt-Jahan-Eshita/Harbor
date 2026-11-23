@@ -18,13 +18,12 @@ export function Card({
       : variant === "inset"
         ? "neu-inset"
         : variant === "glass"
-          ? "glass rounded-[22px]"
+          ? "glass rounded-[16px]"
           : "skeu-plate";
 
   return (
-    <div className={`${variantClass} p-5 ${className}`.trim()} {...rest}>
+    <div className={`${variantClass} p-4 sm:p-5 ${className}`.trim()} {...rest}>
       {children}
     </div>
   );
 }
-

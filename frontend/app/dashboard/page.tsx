@@ -4,17 +4,15 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   Bell,
   Calendar,
-  Mic,
-  Package,
+  Copy,
   Pill,
-  ShoppingBasket,
-  Users,
   Utensils,
 } from "lucide-react";
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
-import { Badge, Card, Skeleton } from "@/components/ui";
+import { Badge, Button, Card, Skeleton, useToast } from "@/components/ui";
 import {
   ApiError,
   CaregiverDosesDashboardResponse,
@@ -34,6 +32,7 @@ function prettifyKey(key: string): string {
 export default function DashboardPage() {
   const { locale, formatNumber, pickLocalized, t } = useI18n();
   const { session } = useSession();
+  const { showToast } = useToast();
 
   const [state, setState] = useState<HouseholdStateResponse | null>(null);
   const [doses, setDoses] = useState<CaregiverDosesDashboardResponse | null>(null);
@@ -68,24 +67,35 @@ export default function DashboardPage() {
 
   if (!session) return <AuthGuardNotice />;
 
-  const quickActions = [
-    { href: "/menu", label: t("dashboard.actionMenu"), icon: Utensils },
-    { href: "/log", label: t("dashboard.actionLog"), icon: Mic },
-    { href: "/members", label: t("dashboard.actionMembers"), icon: Users },
-    { href: "/bazar", label: t("dashboard.actionBazar"), icon: ShoppingBasket },
-    { href: "/stock", label: t("dashboard.actionStock"), icon: Package },
-    { href: "/reminders", label: t("dashboard.actionReminders"), icon: Pill },
-  ];
+  const totalDoses = doses
+    ? doses.summary.taken +
+      doses.summary.taken_late +
+      doses.summary.pending +
+      doses.summary.missed +
+      doses.summary.escalated
+    : 0;
+  const takenDoses = doses ? doses.summary.taken + doses.summary.taken_late : 0;
+  const adherencePct = totalDoses > 0 ? Math.round((takenDoses / totalDoses) * 100) : 0;
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: "var(--text)" }}>
-          {t("dashboard.title")}
-        </h1>
-        <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
-          {t("dashboard.subtitle")}
-        </p>
+    <div className="space-y-6 harbor-reveal">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold" style={{ color: "var(--text)" }}>
+            {t("dashboard.title")}
+          </h1>
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            {t("dashboard.subtitle")}
+          </p>
+        </div>
+
+        <Link href="/menu" className="shrink-0">
+          <Button variant="primary">
+            <Utensils className="h-4 w-4" aria-hidden="true" />
+            <span>{t("dashboard.actionMenu")}</span>
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </Link>
       </div>
 
       {errorMsg && (
@@ -98,31 +108,46 @@ export default function DashboardPage() {
 
       {loading ? (
         <div className="space-y-4">
-          <Skeleton className="h-32 rounded-[20px]" />
-          <Skeleton className="h-44 rounded-[20px]" />
+          <Skeleton className="h-32 rounded-[18px]" />
+          <Skeleton className="h-44 rounded-[18px]" />
         </div>
       ) : state ? (
         <>
-          {/* Hero KPI Strip */}
-          <Card variant="glass" className="space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Household Status Header + 4-Metric Strip */}
+          <Card variant="raised" className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold" style={{ color: "var(--text)" }}>
+                <h2 className="text-lg font-bold" style={{ color: "var(--text)" }}>
                   {state.name}
                 </h2>
                 <p className="text-xs font-mono" style={{ color: "var(--text-muted)" }}>
-                  {t("dashboard.accessCodeLabel")}: {state.access_code} • {state.for_date}
+                  {t("dashboard.accessCodeLabel")}: {state.access_code} · {state.for_date}
                 </p>
               </div>
-              <Badge variant="SAFE_DIRECT" label={`${formatNumber(state.members.length)} ${t("nav.members")}`} />
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="neu"
+                  className="!min-h-[36px] !px-3 !py-1.5 !text-xs"
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      void navigator.clipboard?.writeText(state.access_code);
+                      showToast(t("common.copied"), "success");
+                    }
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t("dashboard.copyCodeBtn")}</span>
+                </Button>
+                <Badge variant="SAFE_DIRECT" label={`${formatNumber(state.members.length)} ${t("nav.members")}`} />
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="neu-inset p-3 text-center">
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.presentMembers")}
                 </p>
-                <p className="text-2xl font-extrabold font-mono" style={{ color: "var(--text)" }}>
+                <p className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--text)" }}>
                   {formatNumber(state.present_member_count)}
                 </p>
               </div>
@@ -130,7 +155,7 @@ export default function DashboardPage() {
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.guestsCount")}
                 </p>
-                <p className="text-2xl font-extrabold font-mono" style={{ color: "var(--saffron-text)" }}>
+                <p className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--saffron-text)" }}>
                   {formatNumber(state.guest_count)}
                 </p>
               </div>
@@ -138,67 +163,70 @@ export default function DashboardPage() {
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.stockItemsCount")}
                 </p>
-                <p className="text-2xl font-extrabold font-mono" style={{ color: "var(--accent)" }}>
+                <p className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--accent)" }}>
                   {formatNumber(state.stock_item_count)}
+                </p>
+              </div>
+              <div className="neu-inset p-3 text-center">
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {t("reminders.summaryTaken")}
+                </p>
+                <p className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--ok)" }}>
+                  {formatNumber(takenDoses)}
                 </p>
               </div>
             </div>
           </Card>
 
-          {/* Quick Actions */}
-          <div className="space-y-3">
-            <h2 className="text-lg font-extrabold" style={{ color: "var(--text)" }}>
-              {t("dashboard.quickActionsTitle")}
-            </h2>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {quickActions.map((act) => {
-                const Icon = act.icon;
-                return (
-                  <Link
-                    key={act.href}
-                    href={act.href}
-                    className="neu-raised flex min-h-[64px] items-center gap-3 p-4 font-bold transition-transform hover:-translate-y-0.5"
-                    style={{ color: "var(--text)" }}
-                  >
-                    <span className="skeu-button flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </span>
-                    <span className="text-sm sm:text-base">{act.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Dose Summary + Alerts + Near Expiry */}
+          {/* Dose Adherence + Near-Expiry Watch */}
           <div className="grid gap-5 md:grid-cols-2">
             {doses && (
-              <Card variant="raised" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text)" }}>
+              <Card variant="raised" className="space-y-4">
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
                     <Pill className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
                     <span>{t("dashboard.dosesTitle")}</span>
                   </h2>
-                  <Link href="/reminders" className="text-xs font-bold underline" style={{ color: "var(--accent)" }}>
-                    {t("nav.reminders")}
+                  <Link href="/reminders" className="text-xs font-semibold underline" style={{ color: "var(--accent)" }}>
+                    {t("dashboard.viewDetails")}
                   </Link>
                 </div>
+
+                {totalDoses > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs">
+                      <span style={{ color: "var(--text-muted)" }}>
+                        {t("dashboard.dosesTakenOf", { taken: takenDoses, total: totalDoses })}
+                      </span>
+                      <span className="font-mono font-semibold" style={{ color: "var(--ok)" }}>
+                        {formatNumber(adherencePct)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full rounded-full overflow-hidden bg-[var(--surface)]">
+                      <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{ width: `${adherencePct}%`, backgroundColor: "var(--ok)" }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
                   <div className="neu-inset p-2.5">
                     <p style={{ color: "var(--text-muted)" }}>{t("reminders.summaryTaken")}</p>
-                    <p className="text-lg font-extrabold font-mono" style={{ color: "var(--ok)" }}>
-                      {formatNumber(doses.summary.taken + doses.summary.taken_late)}
+                    <p className="text-base font-bold font-mono mt-0.5" style={{ color: "var(--ok)" }}>
+                      {formatNumber(takenDoses)}
                     </p>
                   </div>
                   <div className="neu-inset p-2.5">
                     <p style={{ color: "var(--text-muted)" }}>{t("reminders.summaryPending")}</p>
-                    <p className="text-lg font-extrabold font-mono" style={{ color: "var(--text)" }}>
+                    <p className="text-base font-bold font-mono mt-0.5" style={{ color: "var(--text)" }}>
                       {formatNumber(doses.summary.pending)}
                     </p>
                   </div>
                   <div className="neu-inset p-2.5">
                     <p style={{ color: "var(--text-muted)" }}>{t("reminders.summaryMissed")}</p>
-                    <p className="text-lg font-extrabold font-mono" style={{ color: "var(--danger)" }}>
+                    <p className="text-base font-bold font-mono mt-0.5" style={{ color: "var(--danger)" }}>
                       {formatNumber(doses.summary.missed + doses.summary.escalated)}
                     </p>
                   </div>
@@ -207,12 +235,12 @@ export default function DashboardPage() {
             )}
 
             <Card variant="raised" className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text)" }}>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
                   <AlertTriangle className="h-4 w-4" style={{ color: "var(--saffron-text)" }} aria-hidden="true" />
                   <span>{t("dashboard.nearExpiryTitle")}</span>
                 </h2>
-                <Link href="/stock" className="text-xs font-bold underline" style={{ color: "var(--accent)" }}>
+                <Link href="/stock" className="text-xs font-semibold underline" style={{ color: "var(--accent)" }}>
                   {t("nav.stock")}
                 </Link>
               </div>
@@ -234,12 +262,18 @@ export default function DashboardPage() {
             </Card>
           </div>
 
+          {/* Today Events & Alerts */}
           <div className="grid gap-5 md:grid-cols-2">
             <Card variant="raised" className="space-y-3">
-              <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text)" }}>
-                <Calendar className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
-                <span>{t("dashboard.todayEventsTitle")}</span>
-              </h2>
+              <div className="flex items-center justify-between gap-2">
+                <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
+                  <Calendar className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
+                  <span>{t("dashboard.todayEventsTitle")}</span>
+                </h2>
+                <Link href="/log" className="text-xs font-semibold underline" style={{ color: "var(--accent)" }}>
+                  {t("nav.log")}
+                </Link>
+              </div>
               {state.today_events.length === 0 ? (
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>
                   {t("dashboard.noTodayEvents")}
@@ -256,7 +290,7 @@ export default function DashboardPage() {
             </Card>
 
             <Card variant="raised" className="space-y-3">
-              <h2 className="text-base font-extrabold flex items-center gap-2" style={{ color: "var(--text)" }}>
+              <h2 className="text-base font-bold flex items-center gap-2" style={{ color: "var(--text)" }}>
                 <Bell className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
                 <span>{t("dashboard.alertsTitle")}</span>
               </h2>
@@ -268,7 +302,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   {state.recent_alerts.slice(0, 5).map((al) => (
                     <div key={al.id} className="neu-inset flex justify-between px-3 py-2 text-xs">
-                      <span className="font-bold" style={{ color: "var(--text)" }}>
+                      <span className="font-semibold" style={{ color: "var(--text)" }}>
                         {al.kind}
                       </span>
                       <span className="font-mono" style={{ color: "var(--text-muted)" }}>
@@ -285,4 +319,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

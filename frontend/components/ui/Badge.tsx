@@ -86,12 +86,12 @@ export function Badge({ variant, label, ruleId, className = "" }: BadgeProps) {
 
   return (
     <span
-      className={`skeu-tag inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold tracking-wide ${className}`.trim()}
+      className={`skeu-tag inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-wide ${className}`.trim()}
       style={style}
     >
-      <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+      <Icon className="h-3 w-3 shrink-0" aria-hidden="true" />
       <span>{resolvedLabel}</span>
-      {ruleId && <span className="font-mono text-[11px] opacity-90">({ruleId})</span>}
+      {ruleId && <span className="font-mono text-[10px] opacity-90">({ruleId})</span>}
     </span>
   );
 }
