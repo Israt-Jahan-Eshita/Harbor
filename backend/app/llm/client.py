@@ -122,6 +122,17 @@ def _strip_json_fences(raw: str) -> str:
     return cleaned
 
 
+def _extract_json_object(raw: str) -> str:
+    cleaned = _strip_json_fences(raw)
+    if cleaned.startswith("{") and cleaned.endswith("}"):
+        return cleaned
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end > start:
+        return cleaned[start : end + 1]
+    return cleaned
+
+
 def _log_llm_call(
     db: Session | None,
     task: str,
@@ -170,6 +181,7 @@ class LLMClient:
         self.stt_model = stt_model or settings.stt_model
         self.vision_model = vision_model or settings.vision_model
         self.timeout_seconds = timeout_seconds
+        self.last_error: str | None = None
 
         # max_retries=0 prevents hidden SDK double-retries when Groq returns 429 or transient errors
         self._groq: Groq | None = (
@@ -397,8 +409,10 @@ class LLMClient:
         """Extract JSON from an image via Gemini vision with one repair retry (never stores image)."""
         if self._gemini is None or not image_bytes:
             logger.info("Gemini client disabled or empty image for task=%s", task)
+            self.last_error = "GEMINI_DISABLED_OR_EMPTY_IMAGE"
             return None
 
+        self.last_error = None
         start = time.perf_counter()
         summary = f"image_bytes={len(image_bytes)}, mime={mime_type}"
         image_part = genai_types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
@@ -422,7 +436,7 @@ class LLMClient:
                     config=genai_types.GenerateContentConfig(**gen_config_kwargs),
                 )
                 raw_text = resp.text or ""
-                data = json.loads(_strip_json_fences(raw_text))
+                data = json.loads(_extract_json_object(raw_text))
                 last_output = data if isinstance(data, dict) else {"raw": data}
                 parsed = schema_cls.model_validate(data)
                 latency_ms = int((time.perf_counter() - start) * 1000)
@@ -437,11 +451,13 @@ class LLMClient:
                 )
                 return parsed
             except (json.JSONDecodeError, ValidationError) as parse_err:
+                self.last_error = _sanitize_error_text(parse_err)
                 if attempt == 0:
                     prompt_text = (
                         f"{user_prompt}\nPrevious output failed validation: {parse_err}. "
                         "Return valid JSON only matching the schema."
                     )
+                    gen_config_kwargs["max_output_tokens"] = 4096
                     continue
                 latency_ms = int((time.perf_counter() - start) * 1000)
                 _log_llm_call(
@@ -449,13 +465,18 @@ class LLMClient:
                     task,
                     self.vision_model,
                     summary,
-                    last_output or {"error": _sanitize_error_text(parse_err)},
+                    last_output or {"error": self.last_error},
                     False,
                     latency_ms,
                 )
                 return None
             except Exception as exc:
                 safe_err = _sanitize_error_text(exc)
+                self.last_error = safe_err
+                if attempt == 0 and ("thinking" in safe_err.lower() or "400" in safe_err or "503" in safe_err or "timeout" in safe_err.lower()):
+                    gen_config_kwargs.pop("thinking_config", None)
+                    gen_config_kwargs["max_output_tokens"] = 4096
+                    continue
                 latency_ms = int((time.perf_counter() - start) * 1000)
                 logger.warning("Gemini vision error task=%s: %s", task, safe_err)
                 _log_llm_call(db, task, self.vision_model, summary, {"error": safe_err}, False, latency_ms)

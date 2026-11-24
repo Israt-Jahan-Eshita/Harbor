@@ -35,6 +35,44 @@ class ExtractedMedicineRow(BaseModel):
     times_per_day: int | None = Field(default=None, ge=1, le=6)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
+    @field_validator("timing", mode="before")
+    @classmethod
+    def normalize_timing(cls, value: object) -> str:
+        raw = str(value or "unknown").strip().lower().replace("-", "_").replace(" ", "_")
+        if raw in {"before_food", "after_food", "with_food", "any", "unknown"}:
+            return raw
+        if "before" in raw or "empty" in raw or "fasting" in raw or "আগে" in raw:
+            return "before_food"
+        if "after" in raw or "post" in raw or "পরে" in raw:
+            return "after_food"
+        if "with" in raw or "during" in raw or "সাথে" in raw:
+            return "with_food"
+        if "any" in raw or "daily" in raw:
+            return "any"
+        return "unknown"
+
+    @field_validator("times_per_day", mode="before")
+    @classmethod
+    def normalize_times_per_day(cls, value: object) -> int | None:
+        if value is None or value == "":
+            return None
+        try:
+            num = int(round(float(value)))  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
+        return num if 1 <= num <= 6 else None
+
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def normalize_confidence(cls, value: object) -> float:
+        try:
+            num = float(value or 0.0)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return 0.0
+        if num > 1.0:
+            num = num / 100.0
+        return max(0.0, min(1.0, round(num, 3)))
+
     @field_validator("name_as_written")
     @classmethod
     def sanitize_name(cls, value: str) -> str:
@@ -54,6 +92,17 @@ class PrescriptionExtractionDraft(BaseModel):
     medicines: list[ExtractedMedicineRow] = Field(default_factory=list, max_length=30)
     diet_notes: list[str] = Field(default_factory=list, max_length=20)
     overall_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    @field_validator("overall_confidence", mode="before")
+    @classmethod
+    def normalize_overall_confidence(cls, value: object) -> float:
+        try:
+            num = float(value or 0.0)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return 0.0
+        if num > 1.0:
+            num = num / 100.0
+        return max(0.0, min(1.0, round(num, 3)))
 
     @field_validator("diet_notes")
     @classmethod

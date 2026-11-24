@@ -147,15 +147,18 @@ async def upload_prescription_draft(
 
     latency_ms = int((time.perf_counter() - t0) * 1000)
     if llm_client.gemini_api_key:
+        audit_out: dict[str, object] = {
+            "medicine_count": len(draft.get("medicines", [])),
+            "extraction_failed": bool(draft.get("extraction_failed", False)),
+        }
+        if getattr(llm_client, "last_error", None):
+            audit_out["error"] = llm_client.last_error
         db.add(
             LLMCall(
                 task="prescription_extract",
                 model=llm_client.vision_model,
                 input_summary=f"image_bytes={image_size}, mime={content_type}",
-                output={
-                    "medicine_count": len(draft.get("medicines", [])),
-                    "extraction_failed": bool(draft.get("extraction_failed", False)),
-                },
+                output=audit_out,
                 validated=not bool(draft.get("extraction_failed", False)),
                 latency_ms=max(0, latency_ms),
             )
