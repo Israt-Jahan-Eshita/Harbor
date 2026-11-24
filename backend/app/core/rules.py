@@ -4,13 +4,21 @@ from __future__ import annotations
 
 from app.core.types import (
     IngredientData,
+    IngredientVerdict,
     MemberData,
     MemberSafetyResult,
     RecipeData,
     RuleContext,
+    SafetyStatus,
 )
 
 LEVEL_RANK: dict[str, int] = {"low": 1, "medium": 2, "high": 3}
+STATUS_PRECEDENCE: dict[str, int] = {
+    "SAFE_DIRECT": 0,
+    "SAFE_WITH_SPLIT": 1,
+    "BLOCKED": 2,
+    "UNVERIFIED": 3,
+}
 
 ALLERGEN_SYNONYMS: dict[str, str] = {
     "prawn_shellfish": "prawn_shellfish",
@@ -87,6 +95,28 @@ def _has_valid_nutrition_attrs(ing: IngredientData) -> bool:
     return True
 
 
+def _record_verdict(
+    verdicts: dict[str, IngredientVerdict],
+    ingredient_key: str,
+    status: SafetyStatus,
+    reason: str | None = None,
+    split_removable: bool = False,
+) -> None:
+    """Escalate per-ingredient verdict following strict fail-closed precedence."""
+    cur = verdicts.get(ingredient_key)
+    if cur is None:
+        cur = IngredientVerdict(ingredient_key=ingredient_key)
+        verdicts[ingredient_key] = cur
+    if STATUS_PRECEDENCE[status] > STATUS_PRECEDENCE[cur.status]:
+        cur.status = status
+    if cur.status == "SAFE_WITH_SPLIT" and split_removable and status == "SAFE_WITH_SPLIT":
+        cur.split_removable = True
+    elif cur.status != "SAFE_WITH_SPLIT":
+        cur.split_removable = False
+    if reason:
+        _append_unique(cur.reasons, reason)
+
+
 def check_dish_safe(
     member: MemberData,
     recipe: RecipeData,
@@ -100,31 +130,38 @@ def check_dish_safe(
     4. Diet presets & age profiles (checking single-step split eligibility).
     5. Safe direct if nothing triggered.
 
-    Collects ALL triggered reasons and full trace lines.
+    Collects ALL triggered reasons, per-ingredient verdicts, and full trace lines.
     """
     trace: list[str] = []
     unverified_reasons: list[str] = []
     blocked_reasons: list[str] = []
     splittable_reasons: list[str] = []
     split_ingredients: list[str] = []
+    verdicts: dict[str, IngredientVerdict] = {
+        ri.ingredient_key: IngredientVerdict(ingredient_key=ri.ingredient_key)
+        for ri in recipe.ingredients
+    }
 
     resolved_ingredients: list[IngredientData] = []
 
     # Step 1: Unverified checks
     if not recipe.ingredients:
         _append_unique(unverified_reasons, "UNKNOWN_INGREDIENT")
+        _record_verdict(verdicts, "__recipe__", "UNVERIFIED", "UNKNOWN_INGREDIENT")
         trace.append(f"UNVERIFIED recipe '{recipe.key}' has no ingredients -> UNVERIFIED: UNKNOWN_INGREDIENT")
 
     for ri in recipe.ingredients:
         ing = context.ingredients.get(ri.ingredient_key)
         if ing is None:
             _append_unique(unverified_reasons, "UNKNOWN_INGREDIENT")
+            _record_verdict(verdicts, ri.ingredient_key, "UNVERIFIED", "UNKNOWN_INGREDIENT")
             trace.append(
                 f"UNVERIFIED missing ingredient '{ri.ingredient_key}' in recipe '{recipe.key}' -> UNVERIFIED: UNKNOWN_INGREDIENT"
             )
             continue
         if not _has_valid_nutrition_attrs(ing):
             _append_unique(unverified_reasons, "UNKNOWN_INGREDIENT")
+            _record_verdict(verdicts, ing.key, "UNVERIFIED", "UNKNOWN_INGREDIENT")
             trace.append(
                 f"UNVERIFIED incomplete attributes on ingredient '{ing.key}' -> UNVERIFIED: UNKNOWN_INGREDIENT"
             )
@@ -143,6 +180,11 @@ def check_dish_safe(
             continue
         if not med.drug_class or med.drug_class not in context.known_drug_classes:
             _append_unique(unverified_reasons, "UNMAPPED_MEDICINE")
+            if recipe.ingredients:
+                for ri in recipe.ingredients:
+                    _record_verdict(verdicts, ri.ingredient_key, "UNVERIFIED", "UNMAPPED_MEDICINE")
+            else:
+                _record_verdict(verdicts, "__medicine__", "UNVERIFIED", "UNMAPPED_MEDICINE")
             trace.append(
                 f"UNVERIFIED medicine '{med.name_as_written}' (drug_class={med.drug_class}) -> UNVERIFIED: UNMAPPED_MEDICINE"
             )
@@ -156,6 +198,7 @@ def check_dish_safe(
         for tag in sorted(member_allergens & ing_allergens):
             rule_code = ALLERGEN_RULE_NAMES.get(tag, f"{tag.upper()}_ALLERGY")
             _append_unique(blocked_reasons, rule_code)
+            _record_verdict(verdicts, ing.key, "BLOCKED", rule_code)
             trace.append(f"ALLERGEN {tag} matches ingredient {ing.key} -> BLOCKED: {rule_code}")
 
         if ing.key in member.excluded_ingredient_keys or any(
@@ -163,6 +206,7 @@ def check_dish_safe(
         ):
             rule_code = f"GUEST_EXCLUDES_{ing.key.upper()}"
             _append_unique(blocked_reasons, rule_code)
+            _record_verdict(verdicts, ing.key, "BLOCKED", rule_code)
             trace.append(f"EXCLUSION {ing.key} restricted for {member.name} -> BLOCKED: {rule_code}")
 
     # Step 3: Drug-food rules (confirmed active medicines only)
@@ -180,6 +224,7 @@ def check_dish_safe(
                     matched = getattr(ing, rule.ingredient_attr, None) == rule.attr_value
                 if matched:
                     _append_unique(blocked_reasons, rule.rule_id)
+                    _record_verdict(verdicts, ing.key, "BLOCKED", rule.rule_id)
                     trace.append(
                         f"DRUG_FOOD {med.name_as_written} ({med.drug_class}) + "
                         f"{ing.key}.{rule.ingredient_attr}={rule.attr_value} -> BLOCKED: {rule.rule_id}"
@@ -207,12 +252,20 @@ def check_dish_safe(
                     if can_split:
                         _append_unique(splittable_reasons, reason_code)
                         _append_unique(split_ingredients, ing.key)
+                        _record_verdict(
+                            verdicts,
+                            ing.key,
+                            "SAFE_WITH_SPLIT",
+                            reason_code,
+                            split_removable=True,
+                        )
                         trace.append(
                             f"PRESET {preset_name} ({preset_rule.attr}={val} > {preset_rule.max_level}) "
                             f"on {ing.key} splittable before '{recipe.split_step_bn}' -> SAFE_WITH_SPLIT: {reason_code}"
                         )
                     else:
                         _append_unique(blocked_reasons, reason_code)
+                        _record_verdict(verdicts, ing.key, "BLOCKED", reason_code)
                         trace.append(
                             f"PRESET {preset_name} ({preset_rule.attr}={val} > {preset_rule.max_level}) "
                             f"on {ing.key} -> BLOCKED: {reason_code}"
@@ -223,6 +276,7 @@ def check_dish_safe(
         for ing in resolved_ingredients:
             if blocked_tag in ing.tags:
                 _append_unique(blocked_reasons, age_rule_id)
+                _record_verdict(verdicts, ing.key, "BLOCKED", age_rule_id)
                 trace.append(
                     f"AGE_PROFILE {member.age_group} blocks tag '{blocked_tag}' on {ing.key} -> BLOCKED: {age_rule_id}"
                 )
@@ -233,7 +287,7 @@ def check_dish_safe(
         _append_unique(all_reasons, r)
 
     if unverified_reasons:
-        status = "UNVERIFIED"
+        status: SafetyStatus = "UNVERIFIED"
     elif blocked_reasons:
         status = "BLOCKED"
     elif splittable_reasons:
@@ -252,4 +306,5 @@ def check_dish_safe(
         trace=trace,
         split_step_bn=recipe.split_step_bn if status == "SAFE_WITH_SPLIT" else None,
         split_ingredients=split_ingredients if status == "SAFE_WITH_SPLIT" else [],
+        ingredient_verdicts=verdicts,
     )

@@ -9,12 +9,17 @@ from sqlalchemy.orm import Session
 
 from app.api.prescriptions import DRUG_CLASS_CATALOG
 from app.core.rules import ALLERGEN_RULE_NAMES, check_dish_safe
+from app.core.shared_pot import evaluate_multi_member_conflict
 from app.core.types import MedicineData, MemberData
 from app.db import get_db
 from app.deps import verify_session_token
 from app.errors import AppError
-from app.schemas import EngineCheckRequest
-from app.services.context_loader import load_household_members, load_rule_context_and_recipes
+from app.schemas import EngineCheckRequest, EngineConflictCheckRequest, dhaka_today
+from app.services.context_loader import (
+    load_household_members,
+    load_rule_context_and_recipes,
+    load_substitution_groups,
+)
 
 router = APIRouter(prefix="/engine", tags=["engine"])
 
@@ -135,3 +140,85 @@ def check_engine_rule_trace(
             for ri in recipe.ingredients
         ],
     }
+
+
+@router.post("/conflict-check")
+def check_multi_member_conflicts_endpoint(
+    payload: EngineConflictCheckRequest,
+    authorization: str | None = Header(default=None),
+    db: Session = Depends(get_db),
+):
+    """Evaluate multi-member restriction conflicts on the same ingredient and prove order invariance."""
+    ctx, recipes, recipes_by_id = load_rule_context_and_recipes(db)
+    recipe = recipes_by_id.get(payload.recipe_key) or next(
+        (r for r in recipes if r.key == payload.recipe_key), None
+    )
+    if recipe is None:
+        raise AppError("RECIPE_NOT_FOUND", f"Recipe '{payload.recipe_key}' not found.", status_code=404)
+
+    target_members: list[MemberData] = []
+    if payload.custom_members:
+        for idx, cm in enumerate(payload.custom_members):
+            meds = [
+                MedicineData(
+                    name_as_written=str(m.get("name_as_written", "Med")),
+                    drug_class=m.get("drug_class"),
+                    verified_by_caregiver=bool(m.get("verified_by_caregiver", True)),
+                    active=bool(m.get("active", True)),
+                )
+                for m in cm.medicines
+            ]
+            target_members.append(
+                MemberData(
+                    id=f"custom-{idx + 1}",
+                    name=cm.name,
+                    role=cm.role,
+                    age_group=cm.age_group,
+                    allergies=list(cm.allergies),
+                    diet_presets=list(cm.diet_presets),
+                    medicines=meds,
+                )
+            )
+    else:
+        if not authorization or not authorization.lower().startswith("bearer "):
+            raise AppError(
+                "UNAUTHORIZED",
+                "Provide at least 2 custom_members or sign in to inspect household member conflicts.",
+                status_code=401,
+            )
+        hh_id = verify_session_token(authorization.split(" ", 1)[1].strip())
+        hh_members = load_household_members(db, hh_id)
+        if payload.member_ids:
+            wanted = set(payload.member_ids)
+            target_members = [m for m in hh_members if m.id in wanted]
+        else:
+            target_members = hh_members
+
+    if len(target_members) < 2:
+        raise AppError(
+            "NEED_AT_LEAST_TWO_MEMBERS",
+            "Select or configure at least 2 family members to test restriction conflicts.",
+            status_code=400,
+        )
+
+    eval_out = evaluate_multi_member_conflict(
+        members=target_members,
+        recipe=recipe,
+        context=ctx,
+        substitution_groups=load_substitution_groups(),
+        current_month=dhaka_today().month,
+    )
+    eval_out["ingredients"] = [
+        {
+            "key": ri.ingredient_key,
+            "name_bn": ctx.ingredients[ri.ingredient_key].name_bn if ri.ingredient_key in ctx.ingredients else ri.ingredient_key,
+            "name_en": ctx.ingredients[ri.ingredient_key].name_en if ri.ingredient_key in ctx.ingredients else ri.ingredient_key,
+            "potassium_level": ctx.ingredients[ri.ingredient_key].potassium_level if ri.ingredient_key in ctx.ingredients else None,
+            "purine_level": ctx.ingredients[ri.ingredient_key].purine_level if ri.ingredient_key in ctx.ingredients else None,
+            "sodium_level": ctx.ingredients[ri.ingredient_key].sodium_level if ri.ingredient_key in ctx.ingredients else None,
+            "gi_level": ctx.ingredients[ri.ingredient_key].gi_level if ri.ingredient_key in ctx.ingredients else None,
+            "allergen_tags": ctx.ingredients[ri.ingredient_key].allergen_tags if ri.ingredient_key in ctx.ingredients else [],
+        }
+        for ri in recipe.ingredients
+    ]
+    return eval_out

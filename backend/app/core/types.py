@@ -108,6 +108,13 @@ class RuleContext(BaseModel):
     )
 
 
+class IngredientVerdict(BaseModel):
+    ingredient_key: str
+    status: SafetyStatus = "SAFE_DIRECT"
+    reasons: list[str] = Field(default_factory=list)
+    split_removable: bool = False
+
+
 class MemberSafetyResult(BaseModel):
     member_id: str
     member_name: str
@@ -118,6 +125,50 @@ class MemberSafetyResult(BaseModel):
     trace: list[str] = Field(default_factory=list)
     split_step_bn: str | None = None
     split_ingredients: list[str] = Field(default_factory=list)
+    ingredient_verdicts: dict[str, IngredientVerdict] = Field(default_factory=dict)
+
+
+class MemberIngredientPosition(BaseModel):
+    member_id: str
+    member_name: str
+    status: SafetyStatus
+    reasons: list[str] = Field(default_factory=list)
+
+
+class IngredientConflict(BaseModel):
+    ingredient_key: str
+    ingredient_name_bn: str
+    ingredient_name_en: str
+    conflict_type: Literal[
+        "UNVERIFIED_FAIL_CLOSED",
+        "SEVERITY_ESCALATION",
+        "MULTI_RULE_COLLISION",
+        "CONVERGENT_SPLIT",
+        "INCOMPATIBLE_SPLIT_BLOCKED",
+    ]
+    resolution: Literal[
+        "UNVERIFIED_FAIL_CLOSED",
+        "BLOCKED_MOST_RESTRICTIVE_WINS",
+        "SAFE_WITH_SINGLE_SPLIT",
+        "EXCLUDED_INCOMPATIBLE_SPLIT",
+    ]
+    winning_status: SafetyStatus
+    winning_reasons: list[str] = Field(default_factory=list)
+    positions: list[MemberIngredientPosition] = Field(default_factory=list)
+    explanation_bn: str
+    explanation_en: str
+    safe_substitutes: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ConflictResolutionSummary(BaseModel):
+    total_recipes_checked: int
+    safe_direct_count: int
+    safe_with_split_count: int
+    excluded_count: int
+    conflicted_ingredients: list[IngredientConflict] = Field(default_factory=list)
+    zero_safe_deadlock: bool = False
+    deadlock_recovery_bn: str | None = None
+    deadlock_recovery_en: str | None = None
 
 
 class GuestEventData(BaseModel):
@@ -133,6 +184,7 @@ class HouseholdCandidate(BaseModel):
     split_removes: list[str] = Field(default_factory=list)
     reasons: list[str] = Field(default_factory=list)
     member_results: list[MemberSafetyResult] = Field(default_factory=list)
+    ingredient_conflicts: list[IngredientConflict] = Field(default_factory=list)
 
 
 class HouseholdExcluded(BaseModel):
@@ -140,6 +192,7 @@ class HouseholdExcluded(BaseModel):
     status: Literal["EXCLUDED"] = "EXCLUDED"
     reasons: list[str] = Field(default_factory=list)
     member_results: list[MemberSafetyResult] = Field(default_factory=list)
+    ingredient_conflicts: list[IngredientConflict] = Field(default_factory=list)
 
 
 class SharedPotResult(BaseModel):
@@ -150,6 +203,7 @@ class SharedPotResult(BaseModel):
     guest_count: int = 0
     candidates: list[HouseholdCandidate] = Field(default_factory=list)
     excluded: list[HouseholdExcluded] = Field(default_factory=list)
+    conflict_summary: ConflictResolutionSummary | None = None
 
 
 class InventoryEventData(BaseModel):

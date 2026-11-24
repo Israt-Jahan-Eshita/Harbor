@@ -467,3 +467,25 @@ class ClinicianReview(Base):
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     member: Mapped[Member] = relationship(back_populates="clinician_reviews")
+
+
+class WeeklyPlan(Base):
+    """Persisted 7-day x 3-meal household safe cooking & bazar shortfall plan."""
+
+    __tablename__ = "weekly_plans"
+    __table_args__ = (
+        CheckConstraint("status IN ('draft', 'confirmed')", name="ck_weekly_plans_status"),
+        Index("ix_weekly_plans_hh_start", "household_id", "start_date"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    start_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    end_date: Mapped[date] = mapped_column(Date, nullable=False)
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="draft")
+    plan_payload: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    est_shortfall_bdt: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False, default=Decimal("0"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)

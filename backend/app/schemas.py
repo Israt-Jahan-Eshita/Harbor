@@ -251,3 +251,40 @@ class ClinicianDecisionRequest(BaseModel):
     clinician_note: str = Field(..., min_length=2, max_length=2000)
     approved_diet_presets: list[str] = Field(default_factory=list, max_length=10)
     apply_presets_to_member: bool = True
+
+
+class WeeklyDayOverride(BaseModel):
+    for_date: date
+    guest_count: int = Field(default=0, ge=0, le=50)
+    guest_restrictions: list[str] = Field(default_factory=list)
+    away_member_ids: list[str] = Field(default_factory=list)
+
+
+class WeeklyPlanRequest(BaseModel):
+    start_date: date = Field(default_factory=dhaka_today)
+    days: int = Field(default=7, ge=1, le=14)
+    day_overrides: list[WeeklyDayOverride] = Field(default_factory=list)
+    locked_slots: dict[str, str] = Field(default_factory=dict)
+    use_ai_summary: bool = False
+
+
+class WeeklySlotUpdateRequest(BaseModel):
+    for_date: date
+    meal: Literal["breakfast", "lunch", "dinner"]
+    recipe_key: str | None = None
+    locked: bool | None = None
+
+
+class EngineConflictMemberInput(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    role: str = "patient"
+    age_group: str = "adult"
+    allergies: list[str] = Field(default_factory=list)
+    diet_presets: list[str] = Field(default_factory=list)
+    medicines: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class EngineConflictCheckRequest(BaseModel):
+    recipe_key: str = Field(..., min_length=1)
+    member_ids: list[str] = Field(default_factory=list)
+    custom_members: list[EngineConflictMemberInput] = Field(default_factory=list)

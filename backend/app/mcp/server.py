@@ -22,7 +22,11 @@ from app.core.prices import get_price_estimate as core_get_price_estimate
 from app.core.reminders import build_dose_schedule as core_build_dose_schedule
 from app.core.rules import check_dish_safe as core_check_dish_safe
 from app.core.scoring import score_dishes as core_score_dishes
-from app.core.shared_pot import find_shared_pot_dishes as core_find_shared_pot_dishes
+from app.core.shared_pot import (
+    evaluate_multi_member_conflict as core_evaluate_multi_member_conflict,
+    find_shared_pot_dishes as core_find_shared_pot_dishes,
+)
+from app.core.weekly_plan import build_weekly_meal_plan as core_build_weekly_meal_plan
 from app.db import SessionLocal
 from app.deps import verify_confirmation_token
 from app.models import (
@@ -395,6 +399,67 @@ def create_mcp_server(session_factory: sessionmaker = SessionLocal) -> FastMCP:
                     created_ids.append(str(row.id))
             db.commit()
             return {"created_dose_ids": created_ids, "count": len(created_ids)}
+
+    @mcp.tool
+    def build_weekly_meal_plan(
+        household_id: str,
+        start_date: str,
+        days: int = 7,
+    ) -> dict[str, Any]:
+        """Generate a consolidated whole-week (days x 3 meals) safe household menu plan."""
+        with session_factory() as db:
+            hh_uuid = uuid.UUID(household_id)
+            hh = db.scalar(select(Household).where(Household.id == hh_uuid))
+            if hh is None:
+                raise ValueError(f"Household {household_id} not found")
+            sdate = date.fromisoformat(start_date)
+            ctx, recipes, _ = load_rule_context_and_recipes(db)
+            members = load_household_members(db, hh_uuid)
+            stock = load_household_stock(db, hh_uuid, ctx.ingredients)
+            user_obs = load_user_price_observations(db, hh_uuid)
+            recent = load_recent_cooked_keys(db, hh_uuid, sdate)
+            day_events_map = {}
+            from datetime import timedelta
+
+            for off in range(days):
+                cur_d = sdate + timedelta(days=off)
+                guests, away_ids, _ = load_day_events(db, hh_uuid, cur_d)
+                day_events_map[cur_d] = (guests, away_ids)
+            return core_build_weekly_meal_plan(
+                members=members,
+                recipes=recipes,
+                context=ctx,
+                stock_map=stock,
+                start_date=sdate,
+                days=days,
+                household_budget_bdt=hh.monthly_budget_bdt or get_settings().default_monthly_budget_bdt,
+                meal_times=hh.meal_times,
+                day_events_by_date=day_events_map,
+                initial_recent_keys=recent,
+                substitution_groups=load_substitution_groups(),
+                user_price_observations=user_obs,
+                weights=get_settings().score_weights,
+            )
+
+    @mcp.tool
+    def check_ingredient_conflicts(household_id: str, recipe_id: str) -> dict[str, Any]:
+        """Evaluate same-ingredient member restriction conflicts & order invariance on one recipe."""
+        with session_factory() as db:
+            hh_uuid = uuid.UUID(household_id)
+            members = load_household_members(db, hh_uuid)
+            ctx, recipes, recipes_by_id = load_rule_context_and_recipes(db)
+            recipe = recipes_by_id.get(recipe_id) or next(
+                (r for r in recipes if r.key == recipe_id), None
+            )
+            if recipe is None:
+                raise ValueError(f"Recipe {recipe_id} not found")
+            return core_evaluate_multi_member_conflict(
+                members=members,
+                recipe=recipe,
+                context=ctx,
+                substitution_groups=load_substitution_groups(),
+                user_price_observations=load_user_price_observations(db, hh_uuid),
+            )
 
     return mcp
 

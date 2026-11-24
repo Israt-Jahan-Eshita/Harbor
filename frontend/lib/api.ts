@@ -485,6 +485,18 @@ export interface MenuExcludedDish {
   name_en: string;
   reasons: string[];
   member_details: ExcludedMemberDetail[];
+  ingredient_conflicts?: IngredientConflict[];
+}
+
+export interface ConflictResolutionSummary {
+  total_recipes_checked: number;
+  safe_direct_count: number;
+  safe_with_split_count: number;
+  excluded_count: number;
+  conflicted_ingredients: IngredientConflict[];
+  zero_safe_deadlock: boolean;
+  deadlock_recovery_bn?: string | null;
+  deadlock_recovery_en?: string | null;
 }
 
 export interface MenuResponse {
@@ -496,9 +508,182 @@ export interface MenuResponse {
   total_candidates: number;
   top_3: MenuTopDish[];
   excluded: MenuExcludedDish[];
+  conflict_summary?: ConflictResolutionSummary | null;
   validated: boolean;
   used_template: boolean;
   used_fallback: boolean;
+}
+
+export interface MemberIngredientPosition {
+  member_id: string;
+  member_name: string;
+  status: string;
+  reasons: string[];
+}
+
+export interface SafeSubstituteOption {
+  ingredient_key: string;
+  name_bn: string;
+  name_en: string;
+  in_season: boolean;
+  price_bdt?: number | null;
+  per_qty: number;
+  unit: string;
+  resulting_status: string;
+}
+
+export interface IngredientConflict {
+  ingredient_key: string;
+  ingredient_name_bn: string;
+  ingredient_name_en: string;
+  conflict_type: string;
+  resolution: string;
+  winning_status: string;
+  winning_reasons: string[];
+  positions: MemberIngredientPosition[];
+  explanation_bn: string;
+  explanation_en: string;
+  safe_substitutes: SafeSubstituteOption[];
+}
+
+export interface WeeklyLinkedMedicine {
+  member_id: string;
+  member_name: string;
+  medicine_name: string;
+  generic_name?: string | null;
+  timing: string;
+  meal_time: string;
+}
+
+export interface WeeklySlotAlternative {
+  recipe_id: string;
+  recipe_key: string;
+  name_bn: string;
+  name_en: string;
+  category: string;
+  status: string;
+  score: number;
+  split_for: string[];
+  split_step_bn?: string | null;
+}
+
+export interface WeeklyPlanSlot {
+  meal: MealSlot;
+  recipe_id?: string | null;
+  recipe_key?: string | null;
+  name_bn: string;
+  name_en: string;
+  category: string;
+  scaled_servings: number;
+  status: string;
+  split_for: string[];
+  split_step_bn?: string | null;
+  reasons: string[];
+  explanation_bn?: string | null;
+  explanation_en?: string | null;
+  locked: boolean;
+  lock_overridden: boolean;
+  lock_override_reason_bn?: string | null;
+  alternatives: WeeklySlotAlternative[];
+  linked_medicines: WeeklyLinkedMedicine[];
+}
+
+export interface WeeklyPlanDay {
+  for_date: string;
+  weekday_bn: string;
+  weekday_en: string;
+  people_count: number;
+  present_member_names: string[];
+  guest_count: number;
+  excluded_count: number;
+  slots: WeeklyPlanSlot[];
+}
+
+export interface WeeklyShortfallItem {
+  ingredient_key: string;
+  name_bn: string;
+  name_en: string;
+  qty: number;
+  unit: string;
+  est_price_bdt: number;
+  price_source: string;
+  missing_price: boolean;
+  is_estimated: boolean;
+  in_season: boolean;
+  category: string;
+}
+
+export interface WeeklyPlanResponse {
+  plan_id: string;
+  status: string;
+  created_at: string;
+  updated_at?: string;
+  start_date: string;
+  end_date: string;
+  days_count: number;
+  total_slots: number;
+  safe_slots_count: number;
+  split_slots_count: number;
+  deadlock_slots_count: number;
+  unique_dishes_count: number;
+  total_linked_medicines: number;
+  days: WeeklyPlanDay[];
+  conflict_matrix: IngredientConflict[];
+  shortfall_items: WeeklyShortfallItem[];
+  est_weekly_shortfall_bdt: number;
+  weekly_budget_target_bdt: number;
+  over_weekly_budget: boolean;
+  coach_summary_bn: string;
+  coach_summary_en: string;
+  used_ai_summary: boolean;
+}
+
+export interface WeeklyToBazarResponse {
+  bazar_list_id: string;
+  month: string;
+  items_count: number;
+  est_total_bdt: number;
+}
+
+export interface EngineConflictCheckMemberInput {
+  name: string;
+  role?: string;
+  age_group?: string;
+  allergies: string[];
+  diet_presets: string[];
+  medicines: Array<{
+    name_as_written: string;
+    drug_class?: string | null;
+    verified_by_caregiver?: boolean;
+    active?: boolean;
+  }>;
+}
+
+export interface EngineConflictCheckResponse {
+  recipe_key: string;
+  recipe_name_bn: string;
+  recipe_name_en: string;
+  household_status: "SAFE_DIRECT" | "SAFE_WITH_SPLIT" | "EXCLUDED" | string;
+  reasons: string[];
+  split_for: string[];
+  split_step_bn?: string | null;
+  order_invariant: boolean;
+  forward_reasons: string[];
+  reversed_reasons: string[];
+  member_results: Array<{
+    member_id: string;
+    member_name: string;
+    status: string;
+    reasons: string[];
+    trace: string[];
+    split_step_bn?: string | null;
+    split_ingredients: string[];
+  }>;
+  ingredient_conflicts: IngredientConflict[];
+  zero_safe_deadlock: boolean;
+  deadlock_recovery_bn?: string | null;
+  deadlock_recovery_en?: string | null;
+  ingredients: EngineCheckIngredient[];
 }
 
 export interface MenuCookedResponse {
@@ -1061,6 +1246,44 @@ export const harborApi = {
       locale,
     }),
 
+  generateWeeklyPlan: (
+    payload: { start_date: string; days?: number; use_ai_summary?: boolean },
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<WeeklyPlanResponse>("/menu/week/plan", {
+      method: "POST",
+      body: payload,
+      token,
+      locale,
+    }),
+
+  getLatestWeeklyPlan: (token: string, locale: Locale = "bn") =>
+    apiFetch<{ plan: WeeklyPlanResponse | null }>("/menu/week/latest", {
+      token,
+      locale,
+    }),
+
+  updateWeeklyPlanSlot: (
+    planId: string,
+    payload: { for_date: string; meal: MealSlot; recipe_key?: string | null; locked?: boolean | null },
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<WeeklyPlanResponse>(`/menu/week/${planId}/slot`, {
+      method: "PATCH",
+      body: payload,
+      token,
+      locale,
+    }),
+
+  convertWeeklyPlanToBazar: (planId: string, token: string, locale: Locale = "bn") =>
+    apiFetch<WeeklyToBazarResponse>(`/menu/week/${planId}/to-bazar`, {
+      method: "POST",
+      token,
+      locale,
+    }),
+
   buildBazar: (
     payload: { month: string; budget_bdt: number },
     token: string,
@@ -1188,6 +1411,22 @@ export const harborApi = {
     locale: Locale = "bn",
   ) =>
     apiFetch<EngineCheckResponse>("/engine/check", {
+      method: "POST",
+      body: payload,
+      token: token || undefined,
+      locale,
+    }),
+
+  checkEngineConflicts: (
+    payload: {
+      recipe_key: string;
+      member_ids?: string[];
+      custom_members?: EngineConflictCheckMemberInput[];
+    },
+    token?: string | null,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<EngineConflictCheckResponse>("/engine/conflict-check", {
       method: "POST",
       body: payload,
       token: token || undefined,
