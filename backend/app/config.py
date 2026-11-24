@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_api_key: str = ""
     llm_model: str = "openai/gpt-oss-120b"
-    llm_fast_model: str = "llama-3.1-8b-instant"
+    llm_fast_model: str = "openai/gpt-oss-20b"
     stt_model: str = "whisper-large-v3"
     vision_model: str = "gemini-3.5-flash"
     groq_daily_token_cap: int = 150000

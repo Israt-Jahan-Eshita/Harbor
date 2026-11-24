@@ -57,6 +57,27 @@ def _is_rate_limit_error(exc: Exception) -> bool:
     return "429" in msg or "rate_limit" in msg or "rate limit" in msg or "tokens per day" in msg
 
 
+def _rate_limit_cooldown_seconds(exc: Exception, settings: Any) -> int:
+    """Use short cooldown for 1-minute TPM/RPM spikes, full cooldown for daily/generic 429 limits."""
+    msg = str(exc).lower()
+    is_minute_only = (
+        ("per minute" in msg or "tpm" in msg or "rpm" in msg)
+        and "per day" not in msg
+        and "tpd" not in msg
+    )
+    if is_minute_only:
+        return min(20, int(settings.groq_429_cooldown_seconds))
+    return int(settings.groq_429_cooldown_seconds)
+
+
+def _is_model_not_found_error(exc: Exception) -> bool:
+    status_code = getattr(exc, "status_code", None)
+    if status_code == 404:
+        return True
+    msg = str(exc).lower()
+    return "model_not_found" in msg or "does not exist" in msg or "do not have access" in msg
+
+
 def _check_groq_guard(settings: Any, *, check_token_cap: bool = True) -> str | None:
     today_str = _dhaka_today_str(settings.tz)
     with _GROQ_LOCK:
@@ -244,8 +265,12 @@ class LLMClient:
                 )
                 return None
             except Exception as exc:
+                if _is_model_not_found_error(exc) and attempt == 0 and active_model != "openai/gpt-oss-20b":
+                    logger.warning("Groq model %s unavailable; falling back to openai/gpt-oss-20b", active_model)
+                    active_model = "openai/gpt-oss-20b"
+                    continue
                 if _is_rate_limit_error(exc):
-                    _trigger_groq_cooldown(settings.groq_429_cooldown_seconds)
+                    _trigger_groq_cooldown(_rate_limit_cooldown_seconds(exc, settings))
                 safe_err = _sanitize_error_text(exc)
                 logger.warning("Groq call error task=%s attempt=%d: %s", task, attempt, safe_err)
                 latency_ms = int((time.perf_counter() - start) * 1000)
@@ -305,7 +330,7 @@ class LLMClient:
             return msg
         except Exception as exc:
             if _is_rate_limit_error(exc):
-                _trigger_groq_cooldown(settings.groq_429_cooldown_seconds)
+                _trigger_groq_cooldown(_rate_limit_cooldown_seconds(exc, settings))
             safe_err = _sanitize_error_text(exc)
             latency_ms = int((time.perf_counter() - start) * 1000)
             logger.warning("Groq tool call turn failed: %s", safe_err)
@@ -352,7 +377,7 @@ class LLMClient:
             return str(text).strip() if ok else None
         except Exception as exc:
             if _is_rate_limit_error(exc):
-                _trigger_groq_cooldown(settings.groq_429_cooldown_seconds)
+                _trigger_groq_cooldown(_rate_limit_cooldown_seconds(exc, settings))
             safe_err = _sanitize_error_text(exc)
             latency_ms = int((time.perf_counter() - start) * 1000)
             logger.warning("Whisper STT failed: %s", safe_err)
@@ -380,17 +405,21 @@ class LLMClient:
         prompt_text = user_prompt
         last_output: dict[str, Any] | None = None
 
+        gen_config_kwargs: dict[str, Any] = {
+            "system_instruction": system_prompt,
+            "temperature": 0.1,
+            "max_output_tokens": 2048,
+            "response_mime_type": "application/json",
+        }
+        if hasattr(genai_types, "ThinkingConfig"):
+            gen_config_kwargs["thinking_config"] = genai_types.ThinkingConfig(thinking_budget=0)
+
         for attempt in range(2):
             try:
                 resp = self._gemini.models.generate_content(
                     model=self.vision_model,
                     contents=[image_part, prompt_text],
-                    config=genai_types.GenerateContentConfig(
-                        system_instruction=system_prompt,
-                        temperature=0.1,
-                        max_output_tokens=1024,
-                        response_mime_type="application/json",
-                    ),
+                    config=genai_types.GenerateContentConfig(**gen_config_kwargs),
                 )
                 raw_text = resp.text or ""
                 data = json.loads(_strip_json_fences(raw_text))

@@ -23,7 +23,7 @@ services:
       - key: LLM_MODEL
         value: openai/gpt-oss-120b
       - key: LLM_FAST_MODEL
-        value: llama-3.1-8b-instant
+        value: openai/gpt-oss-20b
       - key: STT_MODEL
         value: whisper-large-v3
       - key: VISION_MODEL

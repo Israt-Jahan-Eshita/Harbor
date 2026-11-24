@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+import time
 import uuid
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
@@ -23,7 +25,7 @@ from app.deps import (
 from app.errors import AppError
 from app.llm.client import LLMClient
 from app.llm.extract_prescription import extract_prescription_draft
-from app.models import DoseSchedule, Household, Medicine, Member, Prescription
+from app.models import DoseSchedule, Household, LLMCall, Medicine, Member, Prescription
 from app.schemas import PrescriptionConfirmRequest
 from app.services.context_loader import load_drug_class_map
 
@@ -128,17 +130,36 @@ async def upload_prescription_draft(
         )
 
     drug_map = load_drug_class_map(db)
+    image_size = len(image_bytes)
+    t0 = time.perf_counter()
     try:
-        draft = extract_prescription_draft(
+        draft = await asyncio.to_thread(
+            extract_prescription_draft,
             image_bytes=image_bytes,
             mime_type=content_type,
             llm_client=llm_client,
             drug_class_map=drug_map,
-            db=db,
+            db=None,
         )
     finally:
         # Guardrail #10: never persist prescription images
         del image_bytes
+
+    latency_ms = int((time.perf_counter() - t0) * 1000)
+    if llm_client.gemini_api_key:
+        db.add(
+            LLMCall(
+                task="prescription_extract",
+                model=llm_client.vision_model,
+                input_summary=f"image_bytes={image_size}, mime={content_type}",
+                output={
+                    "medicine_count": len(draft.get("medicines", [])),
+                    "extraction_failed": bool(draft.get("extraction_failed", False)),
+                },
+                validated=not bool(draft.get("extraction_failed", False)),
+                latency_ms=max(0, latency_ms),
+            )
+        )
 
     rx = Prescription(
         member_id=member.id,
