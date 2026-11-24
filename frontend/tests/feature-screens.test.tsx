@@ -183,14 +183,67 @@ describe("Phase 4 Feature Screens", () => {
 
     renderWithProviders(<MenuPage />, DEMO_SESSION);
 
-    fireEvent.click(screen.getByTestId("menu-suggest-btn"));
-
+    // 1. Auto-loads initial menu on mount without needing manual button click
     await waitFor(() => {
       expect(screen.getByTestId("menu-dish-card-0")).toBeInTheDocument();
     });
+    expect(harborApi.suggestMenu).toHaveBeenCalledTimes(1);
 
     expect(screen.getByTestId("menu-dish-card-0")).toHaveTextContent("লাউ ডাল");
     expect(screen.getByTestId("menu-split-callout-0")).toHaveTextContent("লবণ দেওয়ার আগে");
+
+    // 2. Switching meal slot tabs (breakfast / lunch) triggers fresh suggestMenu calls automatically
+    fireEvent.click(screen.getByRole("tab", { name: /সকাল/ }));
+    await waitFor(() => {
+      expect(harborApi.suggestMenu).toHaveBeenCalledWith(
+        expect.objectContaining({ meal: "breakfast" }),
+        DEMO_SESSION.token,
+        "bn",
+      );
+    });
+
+    // 3. Toggling AI explanation triggers immediate fetch with use_agent=true
+    fireEvent.click(screen.getByTestId("menu-toggle-agent"));
+    await waitFor(() => {
+      expect(harborApi.suggestMenu).toHaveBeenCalledWith(
+        expect.objectContaining({ meal: "breakfast", use_agent: true }),
+        DEMO_SESSION.token,
+        "bn",
+      );
+    });
+
+    // 4. Applying guest review recalculates menu immediately via reviewMenu
+    vi.mocked(harborApi.reviewMenu).mockResolvedValue({
+      for_date: "2026-11-22",
+      meal: "breakfast",
+      people_count: 6,
+      present_member_names: ["বাবা", "মা", "আরিফ", "সুমাইয়া"],
+      guest_count: 2,
+      guest_restrictions: ["fish"],
+      away_member_ids: [],
+      total_candidates: 6,
+      validated: true,
+      used_template: true,
+      used_fallback: false,
+      top_3: [],
+      excluded: [],
+    });
+    fireEvent.click(screen.getByTestId("menu-review-btn"));
+    fireEvent.change(screen.getByTestId("review-guest-count"), { target: { value: "2" } });
+    fireEvent.click(screen.getByTestId("review-apply-btn"));
+    await waitFor(() => {
+      expect(harborApi.reviewMenu).toHaveBeenCalledWith(
+        expect.objectContaining({ guest_count: 2 }),
+        DEMO_SESSION.token,
+        "bn",
+      );
+    });
+
+    // Re-load dish card via suggest button for score & excluded checks
+    fireEvent.click(screen.getByTestId("menu-suggest-btn"));
+    await waitFor(() => {
+      expect(screen.getByTestId("menu-dish-card-0")).toBeInTheDocument();
+    });
 
     fireEvent.click(screen.getByTestId("menu-score-toggle-0"));
     expect(screen.getByTestId("menu-score-panel-0")).toBeInTheDocument();
@@ -201,7 +254,9 @@ describe("Phase 4 Feature Screens", () => {
 
     // Toggle full UI to English and verify localized dish title + explanation appear
     fireEvent.click(screen.getByTestId("test-locale-toggle"));
-    expect(screen.getByTestId("menu-dish-card-0")).toHaveTextContent("Bottle Gourd Lentils");
+    await waitFor(() => {
+      expect(screen.getByTestId("menu-dish-card-0")).toHaveTextContent("Bottle Gourd Lentils");
+    });
     expect(screen.getByText(/Set aside Mother's portion before adding salt/)).toBeInTheDocument();
   });
 

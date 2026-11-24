@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends
 from fastmcp import FastMCP
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -204,6 +204,9 @@ async def suggest_menu(
         out = det
 
     response_payload = _format_menu_response(payload.for_date, payload.meal, out)
+    day_guests, day_away_ids, _ = load_day_events(db, hh.id, payload.for_date)
+    response_payload["guest_restrictions"] = sorted({r for g in day_guests for r in g.restrictions})
+    response_payload["away_member_ids"] = sorted(day_away_ids)
 
     db.add(
         MenuSuggestion(
@@ -230,7 +233,14 @@ async def review_menu(
     llm_client: LLMClient = Depends(get_llm_client),
     mcp_server: FastMCP = Depends(get_mcp_server),
 ):
-    """Apply guest / member-away changes for for_date and recalculate menu."""
+    """Replace guest / member-away changes for for_date idempotently and recalculate menu."""
+    db.execute(
+        delete(HouseholdEvent).where(
+            HouseholdEvent.household_id == hh.id,
+            HouseholdEvent.for_date == payload.for_date,
+            HouseholdEvent.kind.in_(["GUESTS", "GUESTS_CANCELLED", "MEMBER_AWAY"]),
+        )
+    )
     if payload.guest_count > 0:
         db.add(
             HouseholdEvent(

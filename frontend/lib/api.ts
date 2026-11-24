@@ -505,6 +505,8 @@ export interface MenuResponse {
   people_count: number;
   present_member_names: string[];
   guest_count: number;
+  guest_restrictions?: string[];
+  away_member_ids?: string[];
   total_candidates: number;
   top_3: MenuTopDish[];
   excluded: MenuExcludedDish[];

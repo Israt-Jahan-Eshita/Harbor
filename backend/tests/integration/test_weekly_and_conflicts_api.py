@@ -128,3 +128,53 @@ def test_engine_conflict_check_custom_and_household(client: TestClient, db_sessi
     assert hh_body["order_invariant"] is True
     assert "PRAWN_ALLERGY" in hh_body["reasons"]
 
+
+def test_menu_review_replaces_guest_and_away_events_idempotently(
+    client: TestClient, db_session: Session
+) -> None:
+    seed_reference_data(db_session)
+    hh = seed_demo_household(db_session, reset=True)
+    tok = sign_session_token(str(hh.id))
+    headers = {"Authorization": f"Bearer {tok}"}
+
+    # 1. Set 2 guests + fish restriction + 1 away member on 2026-11-24 breakfast
+    first_members = client.get("/members", headers=headers).json()["members"]
+    away_id = first_members[0]["id"]
+    r1 = client.post(
+        "/menu/review",
+        headers=headers,
+        json={
+            "for_date": "2026-11-24",
+            "meal": "breakfast",
+            "guest_count": 2,
+            "guest_restrictions": ["fish"],
+            "away_member_ids": [away_id],
+        },
+    )
+    assert r1.status_code == 200
+    d1 = r1.json()
+    assert d1["guest_count"] == 2
+    assert d1["people_count"] == 5  # 3 present + 2 guests
+    assert d1["guest_restrictions"] == ["fish"]
+    assert d1["away_member_ids"] == [away_id]
+
+    # 2. Update guests from 2 -> 3 and clear away member -> must replace cleanly (NOT stack 2+3=5)
+    r2 = client.post(
+        "/menu/review",
+        headers=headers,
+        json={
+            "for_date": "2026-11-24",
+            "meal": "dinner",
+            "guest_count": 3,
+            "guest_restrictions": ["egg"],
+            "away_member_ids": [],
+        },
+    )
+    assert r2.status_code == 200
+    d2 = r2.json()
+    assert d2["guest_count"] == 3
+    assert d2["people_count"] == 7  # 4 members + 3 guests
+    assert d2["guest_restrictions"] == ["egg"]
+    assert d2["away_member_ids"] == []
+
+

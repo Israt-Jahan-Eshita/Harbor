@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CalendarDays,
@@ -16,6 +16,7 @@ import {
   Unlock,
   Users,
   Utensils,
+  X,
 } from "lucide-react";
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
 import { Badge, Button, Card, Input, Sheet, Skeleton, Tabs, Toggle, useToast } from "@/components/ui";
@@ -87,9 +88,24 @@ export default function MenuPage() {
   const [swappingSlotKey, setSwappingSlotKey] = useState<string | null>(null);
   const [bazarConvertedId, setBazarConvertedId] = useState<string | null>(null);
 
+  const requestSeqRef = useRef(0);
+  const activeDateRef = useRef(forDate);
+  const activeMealRef = useRef(meal);
+  const activeAgentRef = useRef(useAgent);
+  const weekStartDateRef = useRef(weekStartDate);
+
+  useEffect(() => {
+    activeDateRef.current = forDate;
+    activeMealRef.current = meal;
+    activeAgentRef.current = useAgent;
+    weekStartDateRef.current = weekStartDate;
+  }, [forDate, meal, useAgent, weekStartDate]);
+
   useEffect(() => {
     if (!session) return;
     let cancelled = false;
+    const seq = ++requestSeqRef.current;
+
     Promise.resolve(harborApi.listMembers(session.token, locale))
       .then((res) => {
         if (!cancelled && res?.members) setMembers(res.members);
@@ -106,6 +122,27 @@ export default function MenuPage() {
       .catch(() => {
         /* fallback allergen list stays active */
       });
+    Promise.resolve(
+      harborApi.suggestMenu(
+        {
+          for_date: activeDateRef.current,
+          meal: activeMealRef.current,
+          use_agent: activeAgentRef.current,
+        },
+        session.token,
+        locale,
+      ),
+    )
+      .then((res) => {
+        if (!cancelled && seq === requestSeqRef.current && res) {
+          setMenuData(res);
+          setErrorMsg(null);
+        }
+      })
+      .catch(() => {
+        /* user can retry manually if initial load fails */
+      });
+
     return () => {
       cancelled = true;
     };
@@ -116,12 +153,24 @@ export default function MenuPage() {
     let cancelled = false;
     Promise.resolve(harborApi.getLatestWeeklyPlan(session.token, locale))
       .then((res) => {
-        if (!cancelled && res?.plan) {
+        if (cancelled) return null;
+        if (res?.plan) {
           setWeeklyPlan(res.plan);
+          return null;
+        }
+        return harborApi.generateWeeklyPlan(
+          { start_date: weekStartDateRef.current, days: 7, use_ai_summary: false },
+          session.token,
+          locale,
+        );
+      })
+      .then((generated) => {
+        if (!cancelled && generated) {
+          setWeeklyPlan(generated);
         }
       })
       .catch(() => {
-        /* no prior weekly plan yet */
+        /* user can click generate manually */
       });
     return () => {
       cancelled = true;
@@ -130,6 +179,7 @@ export default function MenuPage() {
 
   async function runSuggest(targetDate: string, targetMeal: MealSlot, targetUseAgent: boolean) {
     if (!session) return;
+    const seq = ++requestSeqRef.current;
     setLoading(true);
     setErrorMsg(null);
     try {
@@ -138,13 +188,19 @@ export default function MenuPage() {
         session.token,
         locale,
       );
-      setMenuData(res);
+      if (seq === requestSeqRef.current) {
+        setMenuData(res);
+      }
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
-      setErrorMsg(msg);
-      showToast(msg, "error");
+      if (seq === requestSeqRef.current) {
+        const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
+        setErrorMsg(msg);
+        showToast(msg, "error");
+      }
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -152,9 +208,22 @@ export default function MenuPage() {
     await runSuggest(forDate, meal, useAgent);
   }
 
-  async function handleApplyReview(e: React.FormEvent) {
-    e.preventDefault();
+  function handleOpenReviewSheet() {
+    if (menuData) {
+      setGuestCount(String(menuData.guest_count || 0));
+      setGuestRestrictions(menuData.guest_restrictions ?? []);
+      setAwayMemberIds(menuData.away_member_ids ?? []);
+    }
+    setReviewOpen(true);
+  }
+
+  async function submitReviewUpdate(
+    nextGuestCount: number,
+    nextRestrictions: string[],
+    nextAwayIds: string[],
+  ) {
     if (!session) return;
+    const seq = ++requestSeqRef.current;
     setLoading(true);
     setErrorMsg(null);
     try {
@@ -162,23 +231,42 @@ export default function MenuPage() {
         {
           for_date: forDate,
           meal,
-          guest_count: Math.max(0, Number(guestCount) || 0),
-          guest_restrictions: guestRestrictions,
-          away_member_ids: awayMemberIds,
+          guest_count: Math.max(0, nextGuestCount),
+          guest_restrictions: nextGuestCount > 0 ? nextRestrictions : [],
+          away_member_ids: nextAwayIds,
           use_agent: useAgent,
         },
         session.token,
         locale,
       );
-      setMenuData(res);
-      setReviewOpen(false);
+      if (seq === requestSeqRef.current) {
+        setMenuData(res);
+        setReviewOpen(false);
+        showToast(t("menu.reviewUpdatedToast"), "success");
+      }
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
-      setErrorMsg(msg);
-      showToast(msg, "error");
+      if (seq === requestSeqRef.current) {
+        const msg = err instanceof ApiError ? err.message : t("common.errorUnexpected");
+        setErrorMsg(msg);
+        showToast(msg, "error");
+      }
     } finally {
-      setLoading(false);
+      if (seq === requestSeqRef.current) {
+        setLoading(false);
+      }
     }
+  }
+
+  async function handleApplyReview(e: React.FormEvent) {
+    e.preventDefault();
+    await submitReviewUpdate(Math.max(0, Number(guestCount) || 0), guestRestrictions, awayMemberIds);
+  }
+
+  async function handleClearGuestsAndAway() {
+    setGuestCount("0");
+    setGuestRestrictions([]);
+    setAwayMemberIds([]);
+    await submitReviewUpdate(0, [], []);
   }
 
   async function handleMarkCooked(dish: MenuTopDish) {
@@ -483,8 +571,8 @@ export default function MenuPage() {
                 onChange={(e) => {
                   const nextDate = e.target.value;
                   setForDate(nextDate);
-                  if (menuData && !useAgent && nextDate) {
-                    void runSuggest(nextDate, meal, false);
+                  if (nextDate) {
+                    void runSuggest(nextDate, meal, useAgent);
                   }
                 }}
                 data-testid="menu-date-input"
@@ -498,9 +586,7 @@ export default function MenuPage() {
                   onChange={(m) => {
                     const nextMeal = m as MealSlot;
                     setMeal(nextMeal);
-                    if (menuData && !useAgent) {
-                      void runSuggest(forDate, nextMeal, false);
-                    }
+                    void runSuggest(forDate, nextMeal, useAgent);
                   }}
                   ariaLabel={t("menu.mealLabel")}
                   options={[
@@ -514,7 +600,10 @@ export default function MenuPage() {
 
             <Toggle
               checked={useAgent}
-              onChange={setUseAgent}
+              onChange={(nextChecked) => {
+                setUseAgent(nextChecked);
+                void runSuggest(forDate, meal, nextChecked);
+              }}
               label={t("menu.useAgentLabel")}
               data-testid="menu-toggle-agent"
             />
@@ -531,7 +620,7 @@ export default function MenuPage() {
               </Button>
               <Button
                 variant="neu"
-                onClick={() => setReviewOpen(true)}
+                onClick={handleOpenReviewSheet}
                 data-testid="menu-review-btn"
               >
                 <Users className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
@@ -578,7 +667,20 @@ export default function MenuPage() {
                     {t("menu.candidatesLabel")}: {formatNumber(menuData.total_candidates)}
                   </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {(menuData.guest_count > 0 || (menuData.away_member_ids?.length ?? 0) > 0) && (
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => void handleClearGuestsAndAway()}
+                      className="neu-raised-sm inline-flex min-h-[32px] items-center gap-1 rounded-full px-3 py-1 text-xs font-bold cursor-pointer"
+                      style={{ color: "var(--danger)" }}
+                      data-testid="menu-clear-guests-btn"
+                    >
+                      <X className="h-3 w-3" aria-hidden="true" />
+                      <span>{t("menu.clearGuestsBtn")}</span>
+                    </button>
+                  )}
                   {menuData.validated && (
                     <Badge variant="SAFE_DIRECT" label={t("menu.validatedBadge")} />
                   )}
@@ -1035,15 +1137,35 @@ export default function MenuPage() {
       {/* Guests & Absence Review Sheet */}
       <Sheet open={reviewOpen} onClose={() => setReviewOpen(false)} title={t("menu.reviewSheetTitle")}>
         <form onSubmit={handleApplyReview} className="space-y-4">
-          <Input
-            label={t("menu.guestCountLabel")}
-            type="number"
-            min={0}
-            max={50}
-            value={guestCount}
-            onChange={(e) => setGuestCount(e.target.value)}
-            data-testid="review-guest-count"
-          />
+          <div className="space-y-2">
+            <Input
+              label={t("menu.guestCountLabel")}
+              type="number"
+              min={0}
+              max={50}
+              value={guestCount}
+              onChange={(e) => setGuestCount(e.target.value)}
+              data-testid="review-guest-count"
+            />
+            <div className="flex flex-wrap gap-2">
+              {[0, 1, 2, 4].map((presetNum) => {
+                const active = Number(guestCount) === presetNum;
+                return (
+                  <button
+                    key={presetNum}
+                    type="button"
+                    onClick={() => setGuestCount(String(presetNum))}
+                    className={`min-h-[34px] rounded-full px-3 py-1 text-xs font-bold cursor-pointer ${
+                      active ? "skeu-button" : "neu-raised-sm"
+                    }`}
+                    style={active ? undefined : { color: "var(--text)" }}
+                  >
+                    {presetNum === 0 ? t("common.none") : `+${formatNumber(presetNum)} ${t("menu.guestsLabel")}`}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           <div className="space-y-2">
             <p className="text-sm font-semibold" style={{ color: "var(--text)" }}>

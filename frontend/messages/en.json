@@ -418,6 +418,8 @@
     },
     "tabDaily": "Daily Menu",
     "tabWeekly": "Whole Week (7 Days)",
+    "clearGuestsBtn": "Reset Guests / Away",
+    "reviewUpdatedToast": "Menu updated immediately with guest & absence adjustments!",
     "conflictBannerTitle": "Ingredient Restrictions Conflicts Held Steady ({count})",
     "weekly": {
       "title": "Whole-Week Household Meal Planner (7 Days x 3 Meals)",
