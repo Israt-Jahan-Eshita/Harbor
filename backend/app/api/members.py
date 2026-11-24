@@ -17,7 +17,7 @@ from app.core.types import MedicineData
 from app.db import get_db
 from app.deps import get_current_household
 from app.errors import AppError
-from app.models import DoseSchedule, Household, Medicine, Member
+from app.models import ClinicianReview, DoseSchedule, Household, Medicine, Member
 from app.schemas import (
     MedicineCreateRequest,
     MedicineUpdateRequest,
@@ -28,7 +28,37 @@ from app.schemas import (
 router = APIRouter(prefix="/members", tags=["members"])
 
 
-def _serialize_member(m: Member) -> dict:
+def _serialize_latest_review(review: ClinicianReview | None) -> dict | None:
+    if review is None:
+        return None
+    return {
+        "id": str(review.id),
+        "doctor_name": review.doctor_name,
+        "clinician_reg_no": review.clinician_reg_no,
+        "clinician_note": review.clinician_note,
+        "reviewed_at": review.reviewed_at.isoformat() if review.reviewed_at else None,
+        "approved_diet_presets": list(review.approved_diet_presets or []),
+    }
+
+
+def _latest_approved_reviews_by_member(
+    db: Session, member_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, ClinicianReview]:
+    if not member_ids:
+        return {}
+    rows = db.scalars(
+        select(ClinicianReview)
+        .where(ClinicianReview.member_id.in_(member_ids), ClinicianReview.status == "approved")
+        .order_by(ClinicianReview.reviewed_at.desc(), ClinicianReview.created_at.desc())
+    ).all()
+    out: dict[uuid.UUID, ClinicianReview] = {}
+    for row in rows:
+        if row.member_id not in out:
+            out[row.member_id] = row
+    return out
+
+
+def _serialize_member(m: Member, latest_review: ClinicianReview | None = None) -> dict:
     return {
         "id": str(m.id),
         "household_id": str(m.household_id),
@@ -41,6 +71,7 @@ def _serialize_member(m: Member) -> dict:
         "patient_token": m.patient_token,
         "notify_email": m.notify_email,
         "created_at": m.created_at.isoformat(),
+        "latest_clinician_review": _serialize_latest_review(latest_review),
         "medicines": [
             {
                 "id": str(med.id),
@@ -122,7 +153,8 @@ def list_members(hh: Household = Depends(get_current_household), db: Session = D
         .where(Member.household_id == hh.id)
         .order_by(Member.created_at)
     ).all()
-    return {"members": [_serialize_member(m) for m in rows]}
+    latest_map = _latest_approved_reviews_by_member(db, [m.id for m in rows])
+    return {"members": [_serialize_member(m, latest_map.get(m.id)) for m in rows]}
 
 
 @router.post("", status_code=201)
@@ -156,7 +188,8 @@ def create_member(
     db.add(member)
     db.commit()
     member = _get_member_checked(db, hh, member.id)
-    return _serialize_member(member)
+    latest_map = _latest_approved_reviews_by_member(db, [member.id])
+    return _serialize_member(member, latest_map.get(member.id))
 
 
 @router.get("/{member_id}")
@@ -173,7 +206,8 @@ def get_member(
         .order_by(DoseSchedule.due_at.desc())
         .limit(25)
     ).all()
-    data = _serialize_member(member)
+    latest_map = _latest_approved_reviews_by_member(db, [member.id])
+    data = _serialize_member(member, latest_map.get(member.id))
     data["dose_history"] = [
         {
             "id": str(d.id),
@@ -202,7 +236,8 @@ def update_member(
             setattr(member, field, val.strip() if isinstance(val, str) else val)
     db.commit()
     member = _get_member_checked(db, hh, member.id)
-    return _serialize_member(member)
+    latest_map = _latest_approved_reviews_by_member(db, [member.id])
+    return _serialize_member(member, latest_map.get(member.id))
 
 
 @router.delete("/{member_id}")

@@ -204,6 +204,15 @@ export interface MedicineRecord {
   scheduled_doses?: number;
 }
 
+export interface LatestClinicianReview {
+  id: string;
+  doctor_name: string;
+  clinician_reg_no?: string | null;
+  clinician_note?: string | null;
+  reviewed_at?: string | null;
+  approved_diet_presets: string[];
+}
+
 export interface MemberRecord {
   id: string;
   household_id?: string;
@@ -216,6 +225,7 @@ export interface MemberRecord {
   patient_token: string;
   notify_email?: string | null;
   created_at?: string;
+  latest_clinician_review?: LatestClinicianReview | null;
   medicines: MedicineRecord[];
 }
 
@@ -415,6 +425,15 @@ export interface StockAdjustResponse {
   new_qty: number;
   delta: number;
   unit: string;
+}
+
+export interface StockQuickAddResponse {
+  ingredient_key: string;
+  added_qty: number;
+  previous_qty: number;
+  new_qty: number;
+  unit: string;
+  last_purchased_at: string | null;
 }
 
 /* ---------- Daily Menu Contracts ---------- */
@@ -653,6 +672,95 @@ export interface EvalResultsResponse {
   note_en?: string;
 }
 
+/* ---------- Clinician Review & Fee History Contracts ---------- */
+
+export type ClinicianContactMode = "email_invite" | "family_direct";
+export type ClinicianPaymentStatus = "unpaid" | "paid" | "waived";
+export type ClinicianPaymentMethod = "bkash" | "nagad" | "card" | "cash_clinic";
+export type ClinicianReviewStatus = "pending" | "approved" | "changes_requested";
+
+export interface ClinicianSnapshotMedicine {
+  name_as_written: string;
+  generic_name?: string | null;
+  drug_class: string;
+  timing: string;
+  meal_slots: string[];
+}
+
+export interface ClinicianReviewSnapshot {
+  member_name: string;
+  role: string;
+  age_group: string;
+  conditions: string[];
+  allergies: string[];
+  diet_presets: string[];
+  medicines: ClinicianSnapshotMedicine[];
+  adherence_30d: {
+    taken: number;
+    taken_late: number;
+    missed: number;
+    escalated: number;
+    pending: number;
+    total: number;
+    adherence_pct: number | null;
+  };
+  recent_meals: Array<{
+    for_date: string;
+    meal: string;
+    dish_bn: string;
+    dish_en: string;
+    status: string;
+  }>;
+}
+
+export interface ClinicianReviewRecord {
+  id: string;
+  household_id: string;
+  member_id: string;
+  member_name: string;
+  review_token: string;
+  review_url_path: string;
+  doctor_name: string;
+  doctor_email?: string | null;
+  contact_mode: ClinicianContactMode;
+  request_note?: string | null;
+  clinical_snapshot: ClinicianReviewSnapshot;
+  fee_bdt: number;
+  payment_status: ClinicianPaymentStatus;
+  payment_method?: string | null;
+  payment_ref?: string | null;
+  paid_at?: string | null;
+  email_status: "sent" | "link_ready" | "not_requested" | "failed" | string;
+  status: ClinicianReviewStatus;
+  clinician_reg_no?: string | null;
+  clinician_note?: string | null;
+  approved_diet_presets: string[];
+  apply_presets_on_approve: boolean;
+  created_at: string;
+  reviewed_at?: string | null;
+}
+
+export interface ClinicianPaymentSummary {
+  total_paid_bdt: number;
+  total_unpaid_bdt: number;
+  paid_count: number;
+  unpaid_count: number;
+  approved_count: number;
+  pending_count: number;
+  changes_requested_count: number;
+}
+
+export interface ClinicianReviewsListResponse {
+  reviews: ClinicianReviewRecord[];
+  payment_summary: ClinicianPaymentSummary;
+}
+
+export interface ClinicianPortalResponse extends ClinicianReviewRecord {
+  household_name: string;
+  member_current_diet_presets: string[];
+  available_presets: string[];
+}
+
 /* ---------- API Client ---------- */
 
 export const harborApi = {
@@ -860,6 +968,23 @@ export const harborApi = {
       locale,
     }),
 
+  quickAddStock: (
+    payload: {
+      ingredient_key: string;
+      qty_base: number;
+      price_bdt?: number | null;
+      note?: string;
+    },
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<StockQuickAddResponse>("/stock/quick-add", {
+      method: "POST",
+      body: payload,
+      token,
+      locale,
+    }),
+
   suggestMenu: (
     payload: { for_date: string; meal: MealSlot; use_agent: boolean },
     token: string,
@@ -1026,4 +1151,68 @@ export const harborApi = {
 
   getEvalResults: (locale: Locale = "bn") =>
     apiFetch<EvalResultsResponse>("/eval/results", { locale }),
+
+  listClinicianReviews: (token: string, locale: Locale = "bn") =>
+    apiFetch<ClinicianReviewsListResponse>("/clinician/reviews", { token, locale }),
+
+  createClinicianReview: (
+    payload: {
+      member_id: string;
+      doctor_name: string;
+      doctor_email?: string | null;
+      contact_mode: ClinicianContactMode;
+      fee_bdt: number;
+      request_note?: string | null;
+      frontend_origin?: string | null;
+    },
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<ClinicianReviewRecord>("/clinician/reviews", {
+      method: "POST",
+      body: payload,
+      token,
+      locale,
+    }),
+
+  payClinicianReview: (
+    reviewId: string,
+    payload: {
+      payment_method: ClinicianPaymentMethod;
+      payment_ref?: string | null;
+    },
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<ClinicianReviewRecord>(`/clinician/reviews/${reviewId}/pay`, {
+      method: "POST",
+      body: payload,
+      token,
+      locale,
+    }),
+
+  getClinicianPortal: (reviewToken: string, locale: Locale = "bn") =>
+    apiFetch<ClinicianPortalResponse>(`/clinician/portal/${encodeURIComponent(reviewToken)}`, {
+      locale,
+    }),
+
+  submitClinicianDecision: (
+    reviewToken: string,
+    payload: {
+      decision: "approved" | "changes_requested";
+      clinician_reg_no?: string | null;
+      clinician_note: string;
+      approved_diet_presets: string[];
+      apply_presets_to_member: boolean;
+    },
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<ClinicianPortalResponse>(
+      `/clinician/portal/${encodeURIComponent(reviewToken)}/decision`,
+      {
+        method: "POST",
+        body: payload,
+        locale,
+      },
+    ),
 };

@@ -12,8 +12,8 @@ from app.core.inventory import compute_adjust_delta
 from app.db import get_db
 from app.deps import get_current_household
 from app.errors import AppError
-from app.models import Household, Ingredient, InventoryEvent
-from app.schemas import StockAdjustRequest
+from app.models import Household, Ingredient, InventoryEvent, PriceObservation
+from app.schemas import StockAdjustRequest, StockQuickAddRequest
 from app.services.context_loader import load_household_stock, load_rule_context_and_recipes
 
 router = APIRouter(prefix="/stock", tags=["stock"])
@@ -76,4 +76,55 @@ def adjust_stock(
         "new_qty": payload.target_qty_base,
         "delta": delta,
         "unit": ing_row.base_unit,
+    }
+
+
+@router.post("/quick-add", status_code=201)
+def quick_add_stock(
+    payload: StockQuickAddRequest,
+    hh: Household = Depends(get_current_household),
+    db: Session = Depends(get_db),
+):
+    ing_row = db.scalar(select(Ingredient).where(Ingredient.key == payload.ingredient_key))
+    if ing_row is None:
+        raise AppError("UNKNOWN_INGREDIENT", f"Unknown ingredient '{payload.ingredient_key}'.", status_code=404)
+
+    ctx, _, _ = load_rule_context_and_recipes(db)
+    stock_map = load_household_stock(db, hh.id, ctx.ingredients)
+    previous = stock_map[payload.ingredient_key].qty_base if payload.ingredient_key in stock_map else 0.0
+
+    ev = InventoryEvent(
+        household_id=hh.id,
+        event_type="PURCHASED",
+        ingredient_id=ing_row.id,
+        qty_base=Decimal(str(payload.qty_base)),
+        source="ui",
+        raw_text=(payload.note or "").strip() or f"quick_add_{payload.qty_base}",
+    )
+    db.add(ev)
+
+    if payload.price_bdt is not None and payload.price_bdt > 0:
+        db.add(
+            PriceObservation(
+                household_id=hh.id,
+                ingredient_id=ing_row.id,
+                price_bdt=Decimal(str(payload.price_bdt)),
+                per_qty=Decimal(str(payload.qty_base)),
+                source="user_purchase",
+            )
+        )
+
+    db.commit()
+    updated_stock = load_household_stock(db, hh.id, ctx.ingredients).get(payload.ingredient_key)
+    return {
+        "ingredient_key": payload.ingredient_key,
+        "added_qty": payload.qty_base,
+        "previous_qty": previous,
+        "new_qty": updated_stock.qty_base if updated_stock else previous + payload.qty_base,
+        "unit": ing_row.base_unit,
+        "last_purchased_at": (
+            updated_stock.last_purchased_at.isoformat()
+            if (updated_stock and updated_stock.last_purchased_at)
+            else None
+        ),
     }

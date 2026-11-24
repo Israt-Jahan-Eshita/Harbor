@@ -79,6 +79,9 @@ class Member(Base):
     household: Mapped[Household] = relationship(back_populates="members")
     medicines: Mapped[list[Medicine]] = relationship(back_populates="member", cascade="all, delete-orphan")
     prescriptions: Mapped[list[Prescription]] = relationship(back_populates="member", cascade="all, delete-orphan")
+    clinician_reviews: Mapped[list[ClinicianReview]] = relationship(
+        back_populates="member", cascade="all, delete-orphan"
+    )
 
 
 class Prescription(Base):
@@ -404,3 +407,61 @@ class PushSubscription(Base):
     p256dh: Mapped[str] = mapped_column(Text, nullable=False)
     auth: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class ClinicianReview(Base):
+    """Care-plan escalation, fee payment tracking, and clinician approval records."""
+
+    __tablename__ = "clinician_reviews"
+    __table_args__ = (
+        CheckConstraint(
+            "contact_mode IN ('email_invite', 'family_direct')",
+            name="ck_clinician_reviews_contact_mode",
+        ),
+        CheckConstraint("fee_bdt >= 0", name="ck_clinician_reviews_fee_non_negative"),
+        CheckConstraint(
+            "payment_status IN ('unpaid', 'paid', 'waived')",
+            name="ck_clinician_reviews_payment_status",
+        ),
+        CheckConstraint(
+            "payment_method IS NULL OR payment_method IN ('bkash', 'nagad', 'card', 'cash_clinic', 'waived')",
+            name="ck_clinician_reviews_payment_method",
+        ),
+        CheckConstraint(
+            "email_status IN ('sent', 'link_ready', 'not_requested', 'failed')",
+            name="ck_clinician_reviews_email_status",
+        ),
+        CheckConstraint(
+            "status IN ('pending', 'approved', 'changes_requested')",
+            name="ck_clinician_reviews_status",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    household_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("households.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    member_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("members.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    review_token: Mapped[str] = mapped_column(Text, unique=True, nullable=False, index=True)
+    doctor_name: Mapped[str] = mapped_column(Text, nullable=False)
+    doctor_email: Mapped[str | None] = mapped_column(Text, nullable=True)
+    contact_mode: Mapped[str] = mapped_column(Text, nullable=False, default="email_invite")
+    request_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    clinical_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    fee_bdt: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
+    payment_status: Mapped[str] = mapped_column(Text, nullable=False, default="unpaid")
+    payment_method: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
+    paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    email_status: Mapped[str] = mapped_column(Text, nullable=False, default="link_ready")
+    status: Mapped[str] = mapped_column(Text, nullable=False, default="pending")
+    clinician_reg_no: Mapped[str | None] = mapped_column(Text, nullable=True)
+    clinician_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approved_diet_presets: Mapped[list[str]] = mapped_column(ARRAY(Text), nullable=False, default=list)
+    apply_presets_on_approve: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, default=utcnow)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    member: Mapped[Member] = relationship(back_populates="clinician_reviews")

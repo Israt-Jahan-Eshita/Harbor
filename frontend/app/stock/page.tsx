@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Package, SlidersHorizontal } from "lucide-react";
+import { AlertTriangle, Package, Plus, SlidersHorizontal } from "lucide-react";
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
 import { Badge, Button, Card, Input, Sheet, Skeleton, Toggle, useToast } from "@/components/ui";
 import { ApiError, harborApi, StockItem } from "@/lib/api";
@@ -25,6 +25,13 @@ export default function StockPage() {
   const [targetQty, setTargetQty] = useState("");
   const [adjustNote, setAdjustNote] = useState("");
   const [savingAdjust, setSavingAdjust] = useState(false);
+
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const [quickAddKey, setQuickAddKey] = useState("");
+  const [quickAddQty, setQuickAddQty] = useState("500");
+  const [quickAddPrice, setQuickAddPrice] = useState("");
+  const [quickAddNote, setQuickAddNote] = useState("");
+  const [savingQuickAdd, setSavingQuickAdd] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -100,17 +107,95 @@ export default function StockPage() {
     }
   }
 
+  const selectedQuickItem = useMemo(
+    () => items.find((it) => it.ingredient_key === quickAddKey) || items[0] || null,
+    [items, quickAddKey],
+  );
+
+  function openQuickAddSheet() {
+    const first = selectedQuickItem || items[0] || null;
+    if (first && !quickAddKey) {
+      setQuickAddKey(first.ingredient_key);
+      setQuickAddQty(first.base_unit === "piece" ? "4" : "500");
+    }
+    setQuickAddPrice("");
+    setQuickAddNote("");
+    setQuickAddOpen(true);
+  }
+
+  async function handleQuickAdd(e: React.FormEvent) {
+    e.preventDefault();
+    if (!session || !selectedQuickItem) return;
+    const numericQty = Number(quickAddQty);
+    if (!numericQty || numericQty <= 0) return;
+    const numericPrice = quickAddPrice.trim() ? Number(quickAddPrice) : null;
+    setSavingQuickAdd(true);
+    try {
+      const res = await harborApi.quickAddStock(
+        {
+          ingredient_key: selectedQuickItem.ingredient_key,
+          qty_base: numericQty,
+          price_bdt: numericPrice && numericPrice > 0 ? numericPrice : null,
+          note: quickAddNote.trim() || undefined,
+        },
+        session.token,
+        locale,
+      );
+      setItems((prev) =>
+        prev.map((it) =>
+          it.ingredient_key === res.ingredient_key
+            ? {
+                ...it,
+                qty_base: res.new_qty,
+                last_purchased_at: res.last_purchased_at ?? it.last_purchased_at,
+                clamped_negative: false,
+              }
+            : it,
+        ),
+      );
+      showToast(
+        t("stock.quickAddSuccess", {
+          added: res.added_qty,
+          total: res.new_qty,
+          unit: res.unit,
+        }),
+        "success",
+      );
+      setQuickAddOpen(false);
+      setQuickAddPrice("");
+      setQuickAddNote("");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
+    } finally {
+      setSavingQuickAdd(false);
+    }
+  }
+
   if (!session) return <AuthGuardNotice />;
+
+  const quickPresets =
+    selectedQuickItem?.base_unit === "piece" ? [2, 4, 6] : [250, 500, 1000];
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: "var(--text)" }}>
-          {t("stock.title")}
-        </h1>
-        <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
-          {t("stock.subtitle")}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold" style={{ color: "var(--text)" }}>
+            {t("stock.title")}
+          </h1>
+          <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
+            {t("stock.subtitle")}
+          </p>
+        </div>
+        <Button
+          variant="primary"
+          onClick={openQuickAddSheet}
+          disabled={loading || items.length === 0}
+          data-testid="stock-quick-add-btn"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          <span>{t("stock.quickAddBtn")}</span>
+        </Button>
       </div>
 
       {/* Filters */}
@@ -253,6 +338,106 @@ export default function StockPage() {
             </div>
           </form>
         )}
+      </Sheet>
+
+      {/* Quick Add Verified Ingredient Sheet */}
+      <Sheet
+        open={quickAddOpen}
+        onClose={() => setQuickAddOpen(false)}
+        title={t("stock.quickAddTitle")}
+      >
+        <form onSubmit={handleQuickAdd} className="space-y-4">
+          <p className="text-xs leading-relaxed" style={{ color: "var(--text-muted)" }}>
+            {t("stock.quickAddDesc")}
+          </p>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="quick-add-ingredient"
+              className="block text-sm font-semibold"
+              style={{ color: "var(--text)" }}
+            >
+              {t("stock.quickAddSelectLabel")}
+            </label>
+            <select
+              id="quick-add-ingredient"
+              value={selectedQuickItem?.ingredient_key || ""}
+              onChange={(e) => {
+                const nextKey = e.target.value;
+                setQuickAddKey(nextKey);
+                const found = items.find((it) => it.ingredient_key === nextKey);
+                if (found) {
+                  setQuickAddQty(found.base_unit === "piece" ? "4" : "500");
+                }
+              }}
+              className="neu-inset w-full min-h-[46px] px-3 py-2 text-sm"
+              style={{ color: "var(--text)" }}
+              data-testid="stock-quick-add-select"
+            >
+              {items.map((it) => (
+                <option key={it.ingredient_key} value={it.ingredient_key}>
+                  {pickLocalized(it.name_bn, it.name_en)} ({formatNumber(it.qty_base)} {it.base_unit})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Input
+              label={`${t("stock.quickAddQtyLabel")} (${selectedQuickItem?.base_unit || "g"})`}
+              type="number"
+              min={1}
+              step="any"
+              value={quickAddQty}
+              onChange={(e) => setQuickAddQty(e.target.value)}
+              required
+              data-testid="stock-quick-add-qty"
+            />
+            <div className="flex flex-wrap gap-2">
+              {quickPresets.map((presetVal) => (
+                <button
+                  key={presetVal}
+                  type="button"
+                  onClick={() => setQuickAddQty(String(presetVal))}
+                  className="neu-raised-sm min-h-[36px] px-3 py-1 text-xs font-bold cursor-pointer"
+                  style={{ color: "var(--text)" }}
+                >
+                  +{formatNumber(presetVal)} {selectedQuickItem?.base_unit || "g"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label={t("stock.quickAddPriceLabel")}
+              type="number"
+              min={0}
+              step="any"
+              value={quickAddPrice}
+              onChange={(e) => setQuickAddPrice(e.target.value)}
+            />
+            <Input
+              label={t("stock.quickAddNoteLabel")}
+              value={quickAddNote}
+              onChange={(e) => setQuickAddNote(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-1">
+            <Button variant="ghost" onClick={() => setQuickAddOpen(false)}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={savingQuickAdd || !selectedQuickItem}
+              data-testid="stock-quick-add-submit"
+            >
+              {savingQuickAdd ? t("common.loading") : t("stock.quickAddSubmit")}
+            </Button>
+          </div>
+        </form>
       </Sheet>
     </div>
   );

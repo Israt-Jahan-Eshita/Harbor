@@ -148,6 +148,13 @@ class StockAdjustRequest(BaseModel):
     note: str | None = Field(default=None, max_length=200)
 
 
+class StockQuickAddRequest(BaseModel):
+    ingredient_key: str = Field(..., min_length=1)
+    qty_base: float = Field(..., gt=0, le=1000000)
+    price_bdt: float | None = Field(default=None, ge=0, le=1000000)
+    note: str | None = Field(default=None, max_length=200)
+
+
 class MenuSuggestRequest(BaseModel):
     for_date: date = Field(default_factory=dhaka_today)
     meal: Literal["breakfast", "lunch", "dinner"] = "dinner"
@@ -205,3 +212,26 @@ class EngineCheckRequest(BaseModel):
     member_id: str | None = None
     recipe_key: str = Field(..., min_length=1)
     custom_member: dict[str, Any] | None = None
+
+
+class ClinicianReviewCreateRequest(BaseModel):
+    member_id: str = Field(..., min_length=1)
+    doctor_name: str = Field(..., min_length=2, max_length=120)
+    doctor_email: str | None = Field(default=None, max_length=200)
+    contact_mode: Literal["email_invite", "family_direct"] = "email_invite"
+    fee_bdt: int = Field(default=500, ge=0, le=50000)
+    request_note: str | None = Field(default=None, max_length=1000)
+    frontend_origin: str | None = Field(default=None, max_length=200)
+
+
+class ClinicianPaymentRequest(BaseModel):
+    payment_method: Literal["bkash", "nagad", "card", "cash_clinic"]
+    payment_ref: str | None = Field(default=None, max_length=80)
+
+
+class ClinicianDecisionRequest(BaseModel):
+    decision: Literal["approved", "changes_requested"]
+    clinician_reg_no: str | None = Field(default=None, max_length=80)
+    clinician_note: str = Field(..., min_length=2, max_length=2000)
+    approved_diet_presets: list[str] = Field(default_factory=list, max_length=10)
+    apply_presets_to_member: bool = True

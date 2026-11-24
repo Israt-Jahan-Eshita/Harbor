@@ -16,6 +16,7 @@ import {
   Pill,
   Settings,
   ShoppingBasket,
+  Stethoscope,
   Sun,
   Users,
   Utensils,
@@ -46,6 +47,7 @@ const FAMILY_NAV: NavItem[] = [
   { href: "/members", labelKey: "nav.members", icon: Users },
   { href: "/bazar", labelKey: "nav.bazar", icon: ShoppingBasket },
   { href: "/reminders", labelKey: "nav.reminders", icon: Pill },
+  { href: "/reviews", labelKey: "nav.reviews", icon: Stethoscope },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -58,7 +60,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const isPatientRoute = pathname.startsWith("/patient");
+  const isPatientRoute =
+    pathname.startsWith("/patient") || pathname.startsWith("/clinician");
   const isLandingOrWelcome = pathname === "/" || pathname === "/welcome";
 
   useEffect(() => {

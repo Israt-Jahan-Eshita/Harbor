@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api import (
     bazar,
+    clinician,
     dashboard,
     engine as engine_api,
     eval as eval_api,
@@ -110,6 +111,7 @@ def create_app() -> FastAPI:
 
     application.include_router(households.router)
     application.include_router(members.router)
+    application.include_router(clinician.router)
     application.include_router(prescriptions.router)
     application.include_router(events.router)
     application.include_router(stock.router)

@@ -95,3 +95,39 @@ def record_and_dispatch_alert(
     db.add(alert)
     db.flush()
     return alert
+
+
+def send_clinician_review_email(
+    recipient_email: str,
+    doctor_name: str,
+    household_name: str,
+    member_name: str,
+    review_url: str,
+    fee_bdt: int,
+) -> str:
+    """Attempt SMTP delivery for a clinician care-plan review link; report honest delivery status."""
+    settings = get_settings()
+    if not settings.smtp_host or not recipient_email.strip():
+        return "link_ready"
+    try:
+        msg = EmailMessage()
+        msg["Subject"] = f"Harbor Care Plan Review Request — {member_name} ({household_name})"
+        msg["From"] = settings.email_from or "harbor@example.com"
+        msg["To"] = recipient_email.strip()
+        msg.set_content(
+            f"Dear {doctor_name},\n\n"
+            f"The household '{household_name}' has shared a 30-day dietary & medication summary for "
+            f"{member_name} on Harbor.\n"
+            f"Consultation fee: BDT {fee_bdt}\n\n"
+            f"Open your secure review & approval portal:\n{review_url}\n\n"
+            "Thank you,\nHarbor Family Care"
+        )
+        with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
+            if settings.smtp_user and settings.smtp_password:
+                smtp.starttls()
+                smtp.login(settings.smtp_user, settings.smtp_password)
+            smtp.send_message(msg)
+        return "sent"
+    except Exception as exc:
+        logger.warning("Clinician review SMTP delivery failed: %s", exc)
+        return "failed"

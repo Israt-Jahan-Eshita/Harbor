@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Copy, ExternalLink, FileText, Pill, Trash2 } from "lucide-react";
+import { ArrowLeft, Copy, ExternalLink, FileText, Pill, Stethoscope, Trash2 } from "lucide-react";
 import { AuthGuardNotice } from "@/components/AuthGuardNotice";
 import { Badge, Button, Card, Input, Skeleton, useToast } from "@/components/ui";
 import {
@@ -286,6 +286,46 @@ export default function MemberDetailPage() {
             <span>{t("memberDetail.openPatientView")}</span>
           </Link>
         </div>
+      </Card>
+
+      {/* Clinician Verification Card */}
+      <Card variant="glass" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Stethoscope className="h-4 w-4" style={{ color: "var(--accent)" }} aria-hidden="true" />
+            <span className="text-sm font-bold" style={{ color: "var(--text)" }}>
+              {t("memberDetail.clinicianVerifiedTitle")}
+            </span>
+            {member.latest_clinician_review && (
+              <Badge variant="SAFE_DIRECT" label={t("reviews.statusApproved")} />
+            )}
+          </div>
+          {member.latest_clinician_review ? (
+            <div className="space-y-0.5 text-xs" style={{ color: "var(--text-muted)" }}>
+              <p className="font-semibold" style={{ color: "var(--text)" }}>
+                {t("memberDetail.clinicianVerifiedBy", {
+                  doctor: member.latest_clinician_review.doctor_name,
+                  reg: member.latest_clinician_review.clinician_reg_no || "Verified",
+                })}
+              </p>
+              {member.latest_clinician_review.clinician_note && (
+                <p>{member.latest_clinician_review.clinician_note}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {t("memberDetail.clinicianUnverifiedHint")}
+            </p>
+          )}
+        </div>
+        <Link
+          href={`/reviews?memberId=${member.id}`}
+          className="neu-raised-sm inline-flex min-h-[42px] items-center gap-1.5 px-3.5 py-2 text-xs font-bold shrink-0"
+          style={{ color: "var(--text)" }}
+        >
+          <Stethoscope className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
+          <span>{t("memberDetail.clinicianRequestBtn")}</span>
+        </Link>
       </Card>
 
       {/* Dietary Profile Form */}
