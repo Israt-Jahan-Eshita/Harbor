@@ -22,6 +22,12 @@
 - **Clinician Approval & Consultation Fee Portal:** [https://harbor-web.onrender.com/reviews](https://harbor-web.onrender.com/reviews)
 - **Medication Adherence & Disease-Free Patient Screen:** [https://harbor-web.onrender.com/reminders](https://harbor-web.onrender.com/reminders)
 
+### Sample Demo Prescription (For Live OCR Testing)
+To test live Gemini Vision prescription OCR, automatic dosage stripping (`mg`/`ml` removed), drug-class mapping (`ace_inhibitor`, `statin_cyp3a4`), and automatic meal-linked dose scheduling:
+1. Download or select [`assets/demo_prescription.png`](assets/demo_prescription.png) from the repository.
+2. Sign in (`DEMO26` / `1234`), open **Family Members (`/members`)** → **মা** → **Upload Prescription**, and upload `assets/demo_prescription.png`.
+3. Verify the extracted draft rows (`Enalapril`, `Atorvastatin`, `Metformin`, `Pantoprazole`) appear with zero dose strengths saved and map cleanly into active schedules on confirmation.
+
 > **Free-Tier Cold Start Note:** Both Render services run on the free tier (`render.yaml`). An initial request after idle sleep may take ~30–50 seconds to wake the container (monitored via `/healthz`).
 
 ---
@@ -110,6 +116,7 @@ All caregiver routes require `Authorization: Bearer <token>` obtained via `/hous
 | Path | Description |
 | :--- | :--- |
 | `assets/architecture.svg` | 2D vector system architecture diagram |
+| `assets/demo_prescription.png` | Sample synthetic prescription image for testing live OCR intake and automatic dose stripping |
 | `backend/app/core/` | Pure-Python deterministic rules, multi-member conflict resolver, shared-pot & 7-day weekly planner, scoring, Bangla qty normalizer, inventory, validator, templates, reminders, bazar |
 | `backend/app/llm/` | Groq & Gemini clients with quota/cooldown circuit breakers, Pydantic extraction prompts, bounded MCP agent, grounded explanation generator |
 | `backend/app/mcp/` | FastMCP 15-tool server enforcing read/write separation and `confirmation_token` checks |
