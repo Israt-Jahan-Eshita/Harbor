@@ -184,6 +184,17 @@ class BazarBuildRequest(BaseModel):
     budget_bdt: int = Field(..., ge=100, le=1000000)
 
 
+class BazarPredictItemRequest(BaseModel):
+    ingredient_key: str | None = None
+    custom_name: str | None = Field(default=None, max_length=120)
+    qty: float = Field(..., gt=0, le=1000000)
+    unit: Literal["g", "ml", "piece"] = "g"
+    month: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}$")
+    budget_bdt: int | None = Field(default=None, ge=100, le=1000000)
+    current_total_bdt: float = Field(default=0.0, ge=0)
+    use_ai_estimate: bool = False
+
+
 class BazarConfirmRequest(BaseModel):
     bazar_list_id: str
     items: list[dict[str, Any]]

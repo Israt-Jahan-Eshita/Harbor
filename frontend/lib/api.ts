@@ -559,6 +559,36 @@ export interface BazarPurchasedItemPayload {
 export interface BazarPurchasedResponse {
   events_written: number;
   prices_recorded: number;
+  skipped_custom_count?: number;
+}
+
+export interface BazarSafetyWarning {
+  member_name: string;
+  status: string;
+  reasons: string[];
+}
+
+export interface BazarPredictItemPayload {
+  ingredient_key?: string | null;
+  custom_name?: string | null;
+  qty: number;
+  unit: "g" | "ml" | "piece";
+  month?: string | null;
+  budget_bdt?: number | null;
+  current_total_bdt: number;
+  use_ai_estimate?: boolean;
+}
+
+export interface BazarPredictItemResponse {
+  item: BazarItem;
+  prediction_source: string;
+  used_ai: boolean;
+  market_note_bn?: string | null;
+  market_note_en?: string | null;
+  projected_total_bdt: number;
+  over_budget: boolean;
+  budget_delta_bdt: number;
+  safety_warnings: BazarSafetyWarning[];
 }
 
 /* ---------- Reminders & Patient Screen Contracts ---------- */
@@ -1069,6 +1099,18 @@ export const harborApi = {
 
   getLatestBazar: (token: string, locale: Locale = "bn") =>
     apiFetch<{ bazar_list: BazarBuildResponse | null }>("/bazar/latest", {
+      token,
+      locale,
+    }),
+
+  predictBazarItem: (
+    payload: BazarPredictItemPayload,
+    token: string,
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<BazarPredictItemResponse>("/bazar/predict-item", {
+      method: "POST",
+      body: payload,
       token,
       locale,
     }),
