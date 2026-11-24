@@ -2,6 +2,13 @@
 
 **Harbor** is a bilingual (Bangla-first, full Bangla ↔ English conversion) Progressive Web App designed for multi-condition households managed by a single family caregiver. When family members manage overlapping dietary needs and medication schedules—such as chronic kidney disease, diabetes, hypertension, elevated uric acid, and food allergies—Harbor identifies shared-pot meals that everyone can safely eat or split at a single cooking step, plans whole-week (7 days × 3 meals) family menus with rolling variety and consolidated grocery shortfalls, tracks pantry inventory using Bangla units, manages monthly bazar budgets with AI-assisted item price & safety previews, coordinates clinician review approvals and fee payments, and delivers meal-timed medication reminders with strict patient privacy.
 
+> ### COU AI Hackathon 2026 — Official Submission (`Team 18: Last_Minute_Submission`)
+> - **4-Hour Sprint Challenge 1 (Whole-Week Household Meal Planning):** *"Let a caregiver plan the whole family's week of meals in one go, not just today's dish."*  
+>   → Implemented in [`backend/app/core/weekly_plan.py`](backend/app/core/weekly_plan.py), `POST /menu/week/plan`, `GET /menu/week/latest`, `PATCH /menu/week/{plan_id}/slot` (`400 UNSAFE_SLOT_SWAP`), `POST /menu/week/{plan_id}/to-bazar`, FastMCP tool `build_weekly_meal_plan`, UI `/menu` (**Whole Week (7 Days)** tab), and verified in `backend/tests/test_weekly_plan.py` & `backend/tests/test_weekly_and_conflicts_api.py`.
+> - **4-Hour Sprint Challenge 2 (Safety Rule Engine Conflict Steadiness):** *"Hold the safety rule engine steady when two members' restrictions conflict over the same ingredient."*  
+>   → Implemented in [`backend/app/core/rules.py`](backend/app/core/rules.py) & [`backend/app/core/shared_pot.py`](backend/app/core/shared_pot.py) (`evaluate_multi_member_conflict`, fail-closed precedence `UNVERIFIED > BLOCKED > SAFE_WITH_SPLIT > SAFE_DIRECT`, proven order-invariance `[A, B] == [B, A]`, 5 conflict classifications, household-safe substitutes, deadlock recovery), `POST /engine/conflict-check`, FastMCP tool `check_ingredient_conflicts`, UI `/engine` (**Multi-Member Conflict Simulator** tab), and verified in `backend/tests/test_conflict_resolution.py`.
+> - **Verified Quality & AI Evaluation Summary:** Backend `pytest` **`65 passed, 1 skipped`** · Frontend `vitest` **`3/3 files (9/9 tests) passed`** · `eslint` **`0 errors`** · `next build --webpack` **`18/18 routes`** · PostgreSQL **`21 tables`** (`Alembic head d4e7a82b1c03`) · FastMCP Server **`15 deterministic tools`** (`5-tool` bounded menu agent) · 30-Case Benchmark (`/eval`): **`0.0%` (`0/30`) unsafe rate vs `3.3%` plain LLM baseline**.
+
 ---
 
 ## Live Deployment & Demo Access
@@ -45,7 +52,7 @@ Harbor enforces a strict separation between natural-language parsing/explanation
 | **Client PWA** | `frontend/` | 20 App Router screens: caregiver workspace, whole-week planner, confirmation gates, patient reminder screen, clinician portal, conflict simulator, EN/BN switcher, warm Light/Dark UI | REST calls to FastAPI |
 | **API & Tool Gateway** | `backend/app/api/`, `backend/app/mcp/` | Authenticated REST endpoints, signed `confirmation_token` verification, FastMCP 15-tool server | Request handling only |
 | **Deterministic Core** | `backend/app/core/` | Dish safety checks, multi-member conflict precedence engine, shared-pot splitting, slot/date scoring, 7-day weekly planner (`weekly_plan.py`), Bangla unit normalization, inventory math, reminder FSM, validator, bazar planner | Strictly zero |
-| **Bounded AI Layer** | `backend/app/llm/` | Prescription OCR (doses stripped), Bangla voice/text NLU event parsing, bounded 5-tool MCP planning agent (`<= 6` calls), grounded explanations, optional fast-model custom bazar pricing (`llama-3.1-8b-instant`), quota/cooldown circuit breakers | Groq & Gemini APIs |
+| **Bounded AI Layer** | `backend/app/llm/` | Prescription OCR (doses stripped), Bangla voice/text NLU event parsing, bounded 5-tool MCP planning agent (`<= 6` calls), grounded explanations, optional fast-model custom bazar pricing (`openai/gpt-oss-20b`), quota/cooldown circuit breakers | Groq & Gemini APIs |
 | **Persistence & Alerts** | PostgreSQL 18, `services/` | 21-table relational schema via Alembic, audit logs (`llm_calls`), clinician review snapshots, persisted weekly plans, VAPID Web Push, SMTP notifications, `/internal/tick` | PostgreSQL, Web Push, SMTP |
 
 ---
@@ -105,7 +112,7 @@ All caregiver routes require `Authorization: Bearer <token>` obtained via `/hous
 | **Backend Runtime** | Python `3.11.9`, FastAPI `0.165.0`, Uvicorn `0.54.0`, Pydantic `2.14.4`, Pydantic Settings `2.16.3` |
 | **Database & Migrations** | PostgreSQL `18` (`harbor_dev`, `harbor_test`, Supabase pooler in prod), SQLAlchemy `2.1.9`, Alembic `1.20.1`, Psycopg `3.3.9` |
 | **MCP & Security** | FastMCP `4.2.4`, `bcrypt==5.0.0`, `itsdangerous==2.2.0`, `pywebpush==2.5.0`, `rapidfuzz==3.14.6` |
-| **AI Providers (Transient / Bounded)** | Groq (`groq==1.7.0`: `openai/gpt-oss-120b`, `llama-3.1-8b-instant`, `whisper-large-v3`), Google Gemini (`google-genai==3.6.1`: `gemini-3.5-flash`) |
+| **AI Providers (Transient / Bounded)** | Groq (`groq==1.7.0`: `openai/gpt-oss-120b`, `openai/gpt-oss-20b`, `whisper-large-v3`), Google Gemini (`google-genai==3.6.1`: `gemini-3.5-flash`) |
 | **Frontend & UI** | Node.js `v24.16.0`, Next.js `16.4.6` (App Router), React `19.3.1`, Tailwind CSS `4.3.5`, TypeScript `5.9.3`, TanStack Query `5.108.2`, Lucide React `0.540.0` |
 | **Testing Tooling** | Backend: `pytest==9.2.0`, `pytest-asyncio==1.5.0`, `httpx==0.28.1`; Frontend: `vitest==3.2.7`, `@testing-library/react==16.3.3` |
 
