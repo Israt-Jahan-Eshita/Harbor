@@ -4,6 +4,28 @@
 
 ---
 
+## Live Deployment & Demo Access
+
+| Component | Live URL / Detail | Notes |
+| :--- | :--- | :--- |
+| **Live Frontend PWA** | **[https://harbor-web.onrender.com](https://harbor-web.onrender.com)** | Hosted on Render (`render.yaml`, Next.js `16.4.6` production build) |
+| **Live Backend API** | **[https://harbor-api-9r22.onrender.com](https://harbor-api-9r22.onrender.com)** | FastAPI (`GET/HEAD /healthz`: [Health Check](https://harbor-api-9r22.onrender.com/healthz), [Swagger API Docs](https://harbor-api-9r22.onrender.com/docs)) |
+| **Database** | **Supabase Managed PostgreSQL 18** | 21-table schema migrated via Alembic (`d4e7a82b1c03`) |
+| **Demo Credentials** | Access Code: **`DEMO26`** · PIN: **`1234`** | Or click **"Load Demo Household"** on [`/welcome`](https://harbor-web.onrender.com/welcome) |
+| **Auto-Deploy Blueprint** | [`render.yaml`](render.yaml) · [`docs/DEPLOY.md`](docs/DEPLOY.md) | Pushes to `main` automatically trigger Render API & Web rebuilds |
+
+### Quick Judge Demo Links
+- **Whole-Week Planner (7 Days × 3 Meals):** [https://harbor-web.onrender.com/menu](https://harbor-web.onrender.com/menu) *(switch to the **Whole Week (7 Days)** tab)*
+- **Multi-Member Conflict Simulator & Rule Trace:** [https://harbor-web.onrender.com/engine](https://harbor-web.onrender.com/engine) *(switch to **Multi-Member Conflict Simulator**)*
+- **30-Case Plain-LLM vs Harbor Safety Benchmark:** [https://harbor-web.onrender.com/eval](https://harbor-web.onrender.com/eval)
+- **Monthly Bazar Checklist & Item Price/Safety Preview:** [https://harbor-web.onrender.com/bazar](https://harbor-web.onrender.com/bazar)
+- **Clinician Approval & Consultation Fee Portal:** [https://harbor-web.onrender.com/reviews](https://harbor-web.onrender.com/reviews)
+- **Medication Adherence & Disease-Free Patient Screen:** [https://harbor-web.onrender.com/reminders](https://harbor-web.onrender.com/reminders)
+
+> **Free-Tier Cold Start Note:** Both Render services run on the free tier (`render.yaml`). An initial request after idle sleep may take ~30–50 seconds to wake the container (monitored via `/healthz`).
+
+---
+
 ## System Architecture
 
 Harbor enforces a strict separation between natural-language parsing/explanation and safety-critical decision making: **AI reads and explains; deterministic Python code decides.**
