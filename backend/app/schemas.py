@@ -219,9 +219,14 @@ class ClinicianReviewCreateRequest(BaseModel):
     doctor_name: str = Field(..., min_length=2, max_length=120)
     doctor_email: str | None = Field(default=None, max_length=200)
     contact_mode: Literal["email_invite", "family_direct"] = "email_invite"
-    fee_bdt: int = Field(default=500, ge=0, le=50000)
     request_note: str | None = Field(default=None, max_length=1000)
+    custom_email_body: str | None = Field(default=None, max_length=3000)
     frontend_origin: str | None = Field(default=None, max_length=200)
+
+
+class ClinicianFeeRequest(BaseModel):
+    fee_bdt: int = Field(..., ge=0, le=50000)
+    fee_note: str | None = Field(default=None, max_length=500)
 
 
 class ClinicianPaymentRequest(BaseModel):

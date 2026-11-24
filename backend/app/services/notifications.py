@@ -97,13 +97,42 @@ def record_and_dispatch_alert(
     return alert
 
 
-def send_clinician_review_email(
-    recipient_email: str,
+def build_clinician_review_email_body(
     doctor_name: str,
     household_name: str,
     member_name: str,
     review_url: str,
-    fee_bdt: int,
+    request_note: str | None = None,
+    custom_email_body: str | None = None,
+) -> str:
+    """Build either the family's manual email body (with portal URL ensured) or an auto-generated email."""
+    custom = (custom_email_body or "").strip()
+    if custom:
+        if review_url in custom:
+            return custom
+        return f"{custom}\n\nSecure Review Portal Link:\n{review_url}"
+
+    note_block = f"Family Question / Note:\n{request_note.strip()}\n\n" if (request_note or "").strip() else ""
+    return (
+        f"Dear {doctor_name},\n\n"
+        f"The family '{household_name}' is requesting a care-plan and dietary safety review for "
+        f"{member_name} on Harbor.\n\n"
+        f"{note_block}"
+        "On the portal link below, you can:\n"
+        "1. Review the patient's 30-day medical conditions, active drug classes, dose adherence, and recent meals.\n"
+        "2. Set your consultation fee (or waive it to 0 BDT), which will immediately appear on the family's portal for payment.\n"
+        "3. Submit your formal dietary preset verification and clinical recommendation once ready.\n\n"
+        f"Secure Review Portal Link:\n{review_url}\n\n"
+        "Warm regards,\n"
+        f"{household_name} via Harbor Family Care"
+    )
+
+
+def send_clinician_review_email(
+    recipient_email: str,
+    household_name: str,
+    member_name: str,
+    email_body: str,
 ) -> str:
     """Attempt SMTP delivery for a clinician care-plan review link; report honest delivery status."""
     settings = get_settings()
@@ -114,14 +143,7 @@ def send_clinician_review_email(
         msg["Subject"] = f"Harbor Care Plan Review Request — {member_name} ({household_name})"
         msg["From"] = settings.email_from or "harbor@example.com"
         msg["To"] = recipient_email.strip()
-        msg.set_content(
-            f"Dear {doctor_name},\n\n"
-            f"The household '{household_name}' has shared a 30-day dietary & medication summary for "
-            f"{member_name} on Harbor.\n"
-            f"Consultation fee: BDT {fee_bdt}\n\n"
-            f"Open your secure review & approval portal:\n{review_url}\n\n"
-            "Thank you,\nHarbor Family Care"
-        )
+        msg.set_content(email_body)
         with smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=10) as smtp:
             if settings.smtp_user and settings.smtp_password:
                 smtp.starttls()

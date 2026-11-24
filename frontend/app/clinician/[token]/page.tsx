@@ -5,9 +5,11 @@ import { useParams } from "next/navigation";
 import {
   CheckCircle2,
   ChefHat,
+  CreditCard,
   Languages,
   Moon,
   Pill,
+  RefreshCw,
   ShieldCheck,
   Stethoscope,
   Sun,
@@ -29,8 +31,15 @@ export default function ClinicianPortalPage() {
 
   const [portal, setPortal] = useState<ClinicianPortalResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Step 1: Doctor fee setting state
+  const [feeInput, setFeeInput] = useState("500");
+  const [feeNoteInput, setFeeNoteInput] = useState("");
+  const [savingFee, setSavingFee] = useState(false);
+
+  // Step 2: Approval state
   const [regNo, setRegNo] = useState("");
   const [selectedPresets, setSelectedPresets] = useState<string[]>([]);
   const [applyToMember, setApplyToMember] = useState(true);
@@ -45,6 +54,8 @@ export default function ClinicianPortalPage() {
       .then((res) => {
         if (cancelled) return;
         setPortal(res);
+        setFeeInput(res.fee_bdt > 0 ? String(res.fee_bdt) : "500");
+        setFeeNoteInput(res.fee_note || "");
         setRegNo(res.clinician_reg_no || "");
         setSelectedPresets(
           res.approved_diet_presets?.length
@@ -67,10 +78,63 @@ export default function ClinicianPortalPage() {
         setErrorMsg(msg);
         setLoading(false);
       });
+
+    const handleFocus = () => {
+      if (cancelled) return;
+      harborApi
+        .getClinicianPortal(reviewToken, locale)
+        .then((res) => {
+          if (!cancelled) setPortal(res);
+        })
+        .catch(() => {
+          /* silent focus refresh fallback */
+        });
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", handleFocus);
+    }
+
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", handleFocus);
+      }
     };
   }, [reviewToken, locale, t]);
+
+  async function refreshPortal() {
+    if (!reviewToken) return;
+    setRefreshing(true);
+    try {
+      const res = await harborApi.getClinicianPortal(reviewToken, locale);
+      setPortal(res);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  async function handleSaveFee(customFee?: number) {
+    if (!reviewToken) return;
+    const targetFee =
+      customFee !== undefined ? customFee : Math.max(0, Number(feeInput) || 0);
+    setSavingFee(true);
+    try {
+      const updated = await harborApi.setClinicianFee(
+        reviewToken,
+        {
+          fee_bdt: targetFee,
+          fee_note: feeNoteInput.trim() || null,
+        },
+        locale,
+      );
+      setPortal(updated);
+      showToast(t("clinician.feeUpdatedSuccess"), "success");
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
+    } finally {
+      setSavingFee(false);
+    }
+  }
 
   function togglePreset(pk: string) {
     setSelectedPresets((prev) =>
@@ -104,6 +168,9 @@ export default function ClinicianPortalPage() {
       setSubmitting(false);
     }
   }
+
+  const approvalUnlocked =
+    portal?.payment_status === "paid" || portal?.payment_status === "waived";
 
   return (
     <div className="min-h-screen px-4 py-6 sm:py-8 mx-auto max-w-4xl space-y-6">
@@ -183,16 +250,20 @@ export default function ClinicianPortalPage() {
                 ) : (
                   <Badge variant="SAFE_WITH_SPLIT" label={t("reviews.statusPending")} />
                 )}
-                <Badge
-                  variant={portal.payment_status === "paid" ? "SAFE_DIRECT" : "ESTIMATED"}
-                  label={`${t("clinician.feeLabel")}: ${formatNumber(portal.fee_bdt)} ${t("common.bdt")} (${t(
-                    portal.payment_status === "paid"
-                      ? "reviews.payPaid"
-                      : portal.payment_status === "waived"
-                        ? "reviews.payWaived"
-                        : "reviews.payUnpaid",
-                  )})`}
-                />
+                {portal.payment_status === "awaiting_fee" ? (
+                  <Badge variant="INFO" label={t("reviews.payAwaitingFee")} />
+                ) : (
+                  <Badge
+                    variant={approvalUnlocked ? "SAFE_DIRECT" : "ESTIMATED"}
+                    label={`${t("clinician.feeLabel")}: ${formatNumber(portal.fee_bdt)} ${t("common.bdt")} (${t(
+                      portal.payment_status === "paid"
+                        ? "reviews.payPaid"
+                        : portal.payment_status === "waived"
+                          ? "reviews.payWaived"
+                          : "reviews.payUnpaid",
+                    )})`}
+                  />
+                )}
               </div>
             </div>
 
@@ -340,11 +411,111 @@ export default function ClinicianPortalPage() {
             )}
           </Card>
 
-          {/* Approval Decision Form */}
+          {/* Step 1: Doctor Sets Consultation Fee Before Approval */}
+          <Card variant="raised" className="space-y-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div className="space-y-1">
+                <h2 className="text-lg font-extrabold flex items-center gap-2" style={{ color: "var(--text)" }}>
+                  <CreditCard className="h-5 w-5" style={{ color: "var(--accent)" }} aria-hidden="true" />
+                  <span>{t("clinician.feeStepTitle")}</span>
+                </h2>
+                <p className="text-xs sm:text-sm" style={{ color: "var(--text-muted)" }}>
+                  {t("clinician.feeStepDesc")}
+                </p>
+              </div>
+              {portal.payment_status === "unpaid" && (
+                <Button
+                  variant="neu"
+                  onClick={() => void refreshPortal()}
+                  disabled={refreshing}
+                  className="!min-h-[38px] !px-3 !py-1.5 !text-xs"
+                  data-testid="clinician-refresh-payment"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+                  <span>{t("clinician.refreshPaymentBtn")}</span>
+                </Button>
+              )}
+            </div>
+
+            {portal.payment_status === "paid" && (
+              <div className="neu-inset p-3.5 text-xs sm:text-sm font-bold" style={{ color: "var(--ok)" }}>
+                {t("clinician.feePaidBanner", {
+                  amount: portal.fee_bdt,
+                  method: portal.payment_method
+                    ? t(`reviews.methods.${portal.payment_method}`)
+                    : "—",
+                  ref: portal.payment_ref || "—",
+                })}
+              </div>
+            )}
+
+            {portal.payment_status === "waived" && (
+              <div className="neu-inset p-3.5 text-xs sm:text-sm font-bold" style={{ color: "var(--ok)" }}>
+                {t("clinician.feeWaivedBanner")}
+              </div>
+            )}
+
+            {portal.payment_status === "unpaid" && (
+              <div className="neu-inset p-3.5 text-xs sm:text-sm font-bold" style={{ color: "var(--saffron-text)" }}>
+                {t("clinician.feeRequestedBanner", { fee: portal.fee_bdt })}
+              </div>
+            )}
+
+            {portal.payment_status !== "paid" && (
+              <div className="space-y-3">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input
+                    label={t("clinician.feeAmountLabel")}
+                    type="number"
+                    min={0}
+                    max={50000}
+                    value={feeInput}
+                    onChange={(e) => setFeeInput(e.target.value)}
+                    data-testid="clinician-fee-input"
+                  />
+                  <Input
+                    label={t("clinician.feeNoteLabel")}
+                    placeholder={t("clinician.feeNotePlaceholder")}
+                    value={feeNoteInput}
+                    onChange={(e) => setFeeNoteInput(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    type="button"
+                    variant="primary"
+                    disabled={savingFee || Number(feeInput) <= 0}
+                    onClick={() => void handleSaveFee()}
+                    data-testid="clinician-set-fee-btn"
+                  >
+                    <CreditCard className="h-4 w-4" aria-hidden="true" />
+                    <span>{savingFee ? t("common.loading") : t("clinician.requestFeeBtn")}</span>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="neu"
+                    disabled={savingFee}
+                    onClick={() => void handleSaveFee(0)}
+                    data-testid="clinician-waive-fee-btn"
+                  >
+                    <span>{t("clinician.waiveFeeBtn")}</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          {/* Step 2: Approval Decision Form */}
           <Card variant="raised" className="space-y-4">
             <h2 className="text-lg font-extrabold" style={{ color: "var(--text)" }}>
               {t("clinician.decisionTitle")}
             </h2>
+
+            {!approvalUnlocked && (
+              <div className="neu-inset p-3.5 text-xs sm:text-sm font-semibold" style={{ color: "var(--saffron-text)" }}>
+                {t("clinician.approvalLockedHint")}
+              </div>
+            )}
 
             <Input
               label={t("clinician.regNoLabel")}
@@ -408,7 +579,7 @@ export default function ClinicianPortalPage() {
             <div className="flex flex-wrap gap-3 pt-1">
               <Button
                 variant="primary"
-                disabled={submitting || !clinicianNote.trim()}
+                disabled={submitting || !clinicianNote.trim() || !approvalUnlocked}
                 onClick={() => void handleSubmitDecision("approved")}
                 data-testid="clinician-approve-btn"
               >
@@ -431,4 +602,3 @@ export default function ClinicianPortalPage() {
     </div>
   );
 }
-

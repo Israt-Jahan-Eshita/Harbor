@@ -26,10 +26,14 @@ from app.models import (
 )
 from app.schemas import (
     ClinicianDecisionRequest,
+    ClinicianFeeRequest,
     ClinicianPaymentRequest,
     ClinicianReviewCreateRequest,
 )
-from app.services.notifications import send_clinician_review_email
+from app.services.notifications import (
+    build_clinician_review_email_body,
+    send_clinician_review_email,
+)
 
 router = APIRouter(prefix="/clinician", tags=["clinician"])
 
@@ -52,8 +56,10 @@ def _serialize_review(review: ClinicianReview, member_name: str | None = None) -
         "doctor_email": review.doctor_email,
         "contact_mode": review.contact_mode,
         "request_note": review.request_note,
+        "email_body": review.email_body,
         "clinical_snapshot": review.clinical_snapshot,
         "fee_bdt": review.fee_bdt,
+        "fee_note": review.fee_note,
         "payment_status": review.payment_status,
         "payment_method": review.payment_method,
         "payment_ref": review.payment_ref,
@@ -145,6 +151,7 @@ def _compute_payment_summary(reviews: list[ClinicianReview]) -> dict:
         "total_unpaid_bdt": total_unpaid_bdt,
         "paid_count": sum(1 for r in reviews if r.payment_status == "paid"),
         "unpaid_count": sum(1 for r in reviews if r.payment_status == "unpaid"),
+        "awaiting_fee_count": sum(1 for r in reviews if r.payment_status == "awaiting_fee"),
         "approved_count": sum(1 for r in reviews if r.status == "approved"),
         "pending_count": sum(1 for r in reviews if r.status == "pending"),
         "changes_requested_count": sum(1 for r in reviews if r.status == "changes_requested"),
@@ -215,22 +222,26 @@ def create_clinician_review(
             else "http://localhost:3000"
         )
     review_url = f"{origin}/clinician/{review_token}"
+    email_body = build_clinician_review_email_body(
+        doctor_name=payload.doctor_name.strip(),
+        household_name=hh.name,
+        member_name=member.name,
+        review_url=review_url,
+        request_note=payload.request_note,
+        custom_email_body=payload.custom_email_body,
+    )
 
     if payload.contact_mode == "email_invite" and clean_email:
         email_status = send_clinician_review_email(
             recipient_email=clean_email,
-            doctor_name=payload.doctor_name.strip(),
             household_name=hh.name,
             member_name=member.name,
-            review_url=review_url,
-            fee_bdt=payload.fee_bdt,
+            email_body=email_body,
         )
     else:
         email_status = "not_requested"
 
     snapshot = _build_clinical_snapshot(db, hh, member)
-    now = datetime.now(timezone.utc)
-    is_waived = payload.fee_bdt == 0
 
     review = ClinicianReview(
         household_id=hh.id,
@@ -240,12 +251,14 @@ def create_clinician_review(
         doctor_email=clean_email,
         contact_mode=payload.contact_mode,
         request_note=(payload.request_note or "").strip() or None,
+        email_body=email_body,
         clinical_snapshot=snapshot,
-        fee_bdt=payload.fee_bdt,
-        payment_status="waived" if is_waived else "unpaid",
-        payment_method="waived" if is_waived else None,
-        payment_ref="WAIVED" if is_waived else None,
-        paid_at=now if is_waived else None,
+        fee_bdt=0,
+        fee_note=None,
+        payment_status="awaiting_fee",
+        payment_method=None,
+        payment_ref=None,
+        paid_at=None,
         email_status=email_status,
         status="pending",
         approved_diet_presets=list(member.diet_presets or []),
@@ -271,6 +284,12 @@ def pay_clinician_review(
     )
     if review is None:
         raise AppError("REVIEW_NOT_FOUND", "Clinician review record not found.", status_code=404)
+    if review.payment_status == "awaiting_fee":
+        raise AppError(
+            "FEE_NOT_SET",
+            "The clinician has not set a consultation fee yet.",
+            status_code=400,
+        )
     if review.payment_status in ("paid", "waived"):
         raise AppError("ALREADY_PAID", "Consultation fee is already settled.", status_code=400)
 
@@ -314,6 +333,61 @@ def get_clinician_portal(review_token: str, db: Session = Depends(get_db)):
     return _serialize_portal(db, review, hh_name, review.member)
 
 
+@router.post("/portal/{review_token}/fee")
+def set_clinician_fee(
+    review_token: str,
+    payload: ClinicianFeeRequest,
+    db: Session = Depends(get_db),
+):
+    review = db.scalar(
+        select(ClinicianReview)
+        .options(selectinload(ClinicianReview.member).selectinload(Member.household))
+        .where(ClinicianReview.review_token == review_token)
+    )
+    if review is None or review.member is None:
+        raise AppError("REVIEW_NOT_FOUND", "Clinician review link is invalid or expired.", status_code=404)
+    if review.payment_status == "paid":
+        raise AppError(
+            "ALREADY_PAID",
+            "Consultation fee has already been paid by the family.",
+            status_code=400,
+        )
+
+    now = datetime.now(timezone.utc)
+    review.fee_bdt = payload.fee_bdt
+    review.fee_note = (payload.fee_note or "").strip() or None
+
+    if payload.fee_bdt == 0:
+        review.payment_status = "waived"
+        review.payment_method = "waived"
+        review.payment_ref = "WAIVED"
+        review.paid_at = now
+    else:
+        review.payment_status = "unpaid"
+        review.payment_method = None
+        review.payment_ref = None
+        review.paid_at = None
+        db.add(
+            Alert(
+                household_id=review.household_id,
+                member_id=review.member_id,
+                kind="clinician_fee_requested",
+                channel="in_app",
+                payload={
+                    "review_id": str(review.id),
+                    "doctor_name": review.doctor_name,
+                    "fee_bdt": payload.fee_bdt,
+                    "text": f"{review.doctor_name} requested BDT {payload.fee_bdt} consultation fee.",
+                },
+            )
+        )
+
+    db.commit()
+    db.refresh(review)
+    hh_name = review.member.household.name if review.member.household else ""
+    return _serialize_portal(db, review, hh_name, review.member)
+
+
 @router.post("/portal/{review_token}/decision")
 def submit_clinician_decision(
     review_token: str,
@@ -327,6 +401,12 @@ def submit_clinician_decision(
     )
     if review is None or review.member is None:
         raise AppError("REVIEW_NOT_FOUND", "Clinician review link is invalid or expired.", status_code=404)
+    if payload.decision == "approved" and review.payment_status in ("awaiting_fee", "unpaid"):
+        raise AppError(
+            "PAYMENT_REQUIRED",
+            "Set a consultation fee (or waive to 0 BDT) and wait for family payment before approving.",
+            status_code=400,
+        )
 
     valid_presets = {dp.preset for dp in db.scalars(select(DietPreset)).all()}
     clean_presets: list[str] = []

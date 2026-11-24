@@ -675,7 +675,7 @@ export interface EvalResultsResponse {
 /* ---------- Clinician Review & Fee History Contracts ---------- */
 
 export type ClinicianContactMode = "email_invite" | "family_direct";
-export type ClinicianPaymentStatus = "unpaid" | "paid" | "waived";
+export type ClinicianPaymentStatus = "awaiting_fee" | "unpaid" | "paid" | "waived";
 export type ClinicianPaymentMethod = "bkash" | "nagad" | "card" | "cash_clinic";
 export type ClinicianReviewStatus = "pending" | "approved" | "changes_requested";
 
@@ -724,8 +724,10 @@ export interface ClinicianReviewRecord {
   doctor_email?: string | null;
   contact_mode: ClinicianContactMode;
   request_note?: string | null;
+  email_body?: string | null;
   clinical_snapshot: ClinicianReviewSnapshot;
   fee_bdt: number;
+  fee_note?: string | null;
   payment_status: ClinicianPaymentStatus;
   payment_method?: string | null;
   payment_ref?: string | null;
@@ -745,6 +747,7 @@ export interface ClinicianPaymentSummary {
   total_unpaid_bdt: number;
   paid_count: number;
   unpaid_count: number;
+  awaiting_fee_count: number;
   approved_count: number;
   pending_count: number;
   changes_requested_count: number;
@@ -1161,8 +1164,8 @@ export const harborApi = {
       doctor_name: string;
       doctor_email?: string | null;
       contact_mode: ClinicianContactMode;
-      fee_bdt: number;
       request_note?: string | null;
+      custom_email_body?: string | null;
       frontend_origin?: string | null;
     },
     token: string,
@@ -1195,6 +1198,23 @@ export const harborApi = {
     apiFetch<ClinicianPortalResponse>(`/clinician/portal/${encodeURIComponent(reviewToken)}`, {
       locale,
     }),
+
+  setClinicianFee: (
+    reviewToken: string,
+    payload: {
+      fee_bdt: number;
+      fee_note?: string | null;
+    },
+    locale: Locale = "bn",
+  ) =>
+    apiFetch<ClinicianPortalResponse>(
+      `/clinician/portal/${encodeURIComponent(reviewToken)}/fee`,
+      {
+        method: "POST",
+        body: payload,
+        locale,
+      },
+    ),
 
   submitClinicianDecision: (
     reviewToken: string,

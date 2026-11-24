@@ -8,6 +8,7 @@ import {
   CreditCard,
   ExternalLink,
   Mail,
+  RefreshCw,
   Send,
   Stethoscope,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const EMPTY_SUMMARY: ClinicianPaymentSummary = {
   total_unpaid_bdt: 0,
   paid_count: 0,
   unpaid_count: 0,
+  awaiting_fee_count: 0,
   approved_count: 0,
   pending_count: 0,
   changes_requested_count: 0,
@@ -47,17 +49,19 @@ export default function ReviewsPage() {
   const [reviews, setReviews] = useState<ClinicianReviewRecord[]>([]);
   const [summary, setSummary] = useState<ClinicianPaymentSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<"approvals" | "payments">("approvals");
+  const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null);
 
-  // Create review form state
+  // Create review form state (Doctor sets fee later in Doctor Portal)
   const [memberId, setMemberId] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [doctorEmail, setDoctorEmail] = useState("");
   const [contactMode, setContactMode] = useState<ClinicianContactMode>("email_invite");
-  const [feeBdt, setFeeBdt] = useState("500");
   const [requestNote, setRequestNote] = useState("");
+  const [customEmailBody, setCustomEmailBody] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   // Payment sheet state
@@ -93,15 +97,41 @@ export default function ReviewsPage() {
         setErrorMsg(err instanceof ApiError ? err.message : t("common.errorUnexpected"));
         setLoading(false);
       });
+
+    const handleFocus = () => {
+      if (cancelled) return;
+      harborApi
+        .listClinicianReviews(session.token, locale)
+        .then((rRes) => {
+          if (cancelled) return;
+          setReviews(rRes.reviews || []);
+          setSummary(rRes.payment_summary || EMPTY_SUMMARY);
+        })
+        .catch(() => {
+          /* silent focus refresh fallback */
+        });
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("focus", handleFocus);
+    }
+
     return () => {
       cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("focus", handleFocus);
+      }
     };
   }, [session, locale, t]);
 
   async function refreshReviews(token: string) {
-    const res = await harborApi.listClinicianReviews(token, locale);
-    setReviews(res.reviews || []);
-    setSummary(res.payment_summary || EMPTY_SUMMARY);
+    setRefreshing(true);
+    try {
+      const res = await harborApi.listClinicianReviews(token, locale);
+      setReviews(res.reviews || []);
+      setSummary(res.payment_summary || EMPTY_SUMMARY);
+    } finally {
+      setRefreshing(false);
+    }
   }
 
   async function handleCreateReview(e: React.FormEvent) {
@@ -116,8 +146,8 @@ export default function ReviewsPage() {
           doctor_name: doctorName.trim(),
           doctor_email: doctorEmail.trim() || null,
           contact_mode: contactMode,
-          fee_bdt: Math.max(0, Number(feeBdt) || 0),
           request_note: requestNote.trim() || null,
+          custom_email_body: customEmailBody.trim() || null,
           frontend_origin: origin,
         },
         session.token,
@@ -127,6 +157,7 @@ export default function ReviewsPage() {
       setDoctorName("");
       setDoctorEmail("");
       setRequestNote("");
+      setCustomEmailBody("");
       showToast(t("reviews.createSuccess"), "success");
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : t("common.errorUnexpected"), "error");
@@ -169,16 +200,12 @@ export default function ReviewsPage() {
 
   function buildMailtoHref(r: ClinicianReviewRecord): string {
     const recipient = r.doctor_email || "";
-    const subject = encodeURIComponent(
-      `Harbor Care Plan Review — ${r.member_name}`,
-    );
-    const body = encodeURIComponent(
+    const subject = encodeURIComponent(`Harbor Care Plan Review — ${r.member_name}`);
+    const fallbackBody =
       `Dear ${r.doctor_name},\n\n` +
-        `Please review ${r.member_name}'s 30-day dietary and medication summary and submit your approval:\n` +
-        `${fullPortalUrl(r.review_url_path)}\n\n` +
-        (r.request_note ? `Family Note: ${r.request_note}\n\n` : "") +
-        `Consultation Fee: BDT ${r.fee_bdt} (${r.payment_status})\n`,
-    );
+      `Please review ${r.member_name}'s 30-day dietary and medication summary, set your consultation fee, and submit your approval:\n` +
+      `${fullPortalUrl(r.review_url_path)}\n`;
+    const body = encodeURIComponent(r.email_body || fallbackBody);
     return `mailto:${recipient}?subject=${subject}&body=${body}`;
   }
 
@@ -197,9 +224,12 @@ export default function ReviewsPage() {
       return <Badge variant="SAFE_DIRECT" label={t("reviews.payPaid")} />;
     }
     if (paymentStatus === "waived") {
-      return <Badge variant="INFO" label={t("reviews.payWaived")} />;
+      return <Badge variant="SAFE_DIRECT" label={t("reviews.payWaived")} />;
     }
-    return <Badge variant="ESTIMATED" label={t("reviews.payUnpaid")} />;
+    if (paymentStatus === "unpaid") {
+      return <Badge variant="ESTIMATED" label={t("reviews.payUnpaid")} />;
+    }
+    return <Badge variant="INFO" label={t("reviews.payAwaitingFee")} />;
   }
 
   function emailStatusLabel(status: string): string {
@@ -213,14 +243,27 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-2.5" style={{ color: "var(--text)" }}>
-          <Stethoscope className="h-7 w-7 shrink-0" style={{ color: "var(--accent)" }} aria-hidden="true" />
-          <span>{t("reviews.title")}</span>
-        </h1>
-        <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
-          {t("reviews.subtitle")}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-extrabold flex items-center gap-2.5" style={{ color: "var(--text)" }}>
+            <Stethoscope className="h-7 w-7 shrink-0" style={{ color: "var(--accent)" }} aria-hidden="true" />
+            <span>{t("reviews.title")}</span>
+          </h1>
+          <p className="text-sm sm:text-base" style={{ color: "var(--text-muted)" }}>
+            {t("reviews.subtitle")}
+          </p>
+        </div>
+
+        <Button
+          variant="neu"
+          onClick={() => void refreshReviews(session.token)}
+          disabled={refreshing}
+          className="!min-h-[42px] !px-3.5 !py-2 !text-xs"
+          data-testid="reviews-refresh-btn"
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} aria-hidden="true" />
+          <span>{t("reviews.refreshBtn")}</span>
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -322,7 +365,7 @@ export default function ReviewsPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <Input
               label={t("reviews.doctorNameLabel")}
               placeholder={t("reviews.doctorNamePlaceholder")}
@@ -340,16 +383,6 @@ export default function ReviewsPage() {
               required={contactMode === "email_invite"}
               data-testid="review-doctor-email"
             />
-            <Input
-              label={t("reviews.feeLabel")}
-              type="number"
-              min={0}
-              max={50000}
-              value={feeBdt}
-              onChange={(e) => setFeeBdt(e.target.value)}
-              required
-              data-testid="review-fee-input"
-            />
           </div>
 
           <div className="space-y-1.5">
@@ -365,6 +398,25 @@ export default function ReviewsPage() {
               className="neu-inset w-full p-3 text-sm placeholder:text-[var(--text-muted)]"
               style={{ color: "var(--text)" }}
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="review-custom-email" className="block text-sm font-semibold" style={{ color: "var(--text)" }}>
+              {t("reviews.customEmailLabel")}
+            </label>
+            <textarea
+              id="review-custom-email"
+              rows={3}
+              value={customEmailBody}
+              onChange={(e) => setCustomEmailBody(e.target.value)}
+              placeholder={t("reviews.customEmailPlaceholder")}
+              className="neu-inset w-full p-3 text-sm placeholder:text-[var(--text-muted)]"
+              style={{ color: "var(--text)" }}
+              data-testid="review-custom-email"
+            />
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {t("reviews.customEmailHint")}
+            </p>
           </div>
 
           <Button
@@ -408,124 +460,171 @@ export default function ReviewsPage() {
           </Card>
         ) : (
           <div className="space-y-4">
-            {reviews.map((r) => (
-              <Card key={r.id} variant="raised" className="space-y-4" data-testid="review-history-card">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-base font-extrabold" style={{ color: "var(--text)" }}>
-                        {r.member_name} — {r.doctor_name}
-                      </h3>
-                      {renderStatusBadge(r.status)}
-                      {renderPaymentBadge(r.payment_status)}
+            {reviews.map((r) => {
+              const emailExpanded = expandedEmailId === r.id;
+              return (
+                <Card key={r.id} variant="raised" className="space-y-4" data-testid="review-history-card">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-base font-extrabold" style={{ color: "var(--text)" }}>
+                          {r.member_name} — {r.doctor_name}
+                        </h3>
+                        {renderStatusBadge(r.status)}
+                        {renderPaymentBadge(r.payment_status)}
+                      </div>
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        {emailStatusLabel(r.email_status)}
+                        {r.doctor_email ? ` · ${r.doctor_email}` : ""} ·{" "}
+                        {t("reviews.requestedAtLabel")}: {new Date(r.created_at).toLocaleString()}
+                      </p>
                     </div>
-                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {emailStatusLabel(r.email_status)}
-                      {r.doctor_email ? ` · ${r.doctor_email}` : ""} ·{" "}
-                      {t("reviews.requestedAtLabel")}: {new Date(r.created_at).toLocaleString()}
-                    </p>
+
+                    {r.payment_status !== "awaiting_fee" && (
+                      <span className="font-mono text-base font-extrabold" style={{ color: "var(--accent)" }}>
+                        {formatNumber(r.fee_bdt)} {t("common.bdt")}
+                      </span>
+                    )}
                   </div>
 
-                  <span className="font-mono text-base font-extrabold" style={{ color: "var(--accent)" }}>
-                    {formatNumber(r.fee_bdt)} {t("common.bdt")}
-                  </span>
-                </div>
+                  {r.payment_status === "awaiting_fee" && (
+                    <div className="neu-inset p-3 text-xs" style={{ color: "var(--text-muted)" }}>
+                      {t("reviews.awaitingFeeNotice")}
+                    </div>
+                  )}
 
-                {r.request_note && (
-                  <p className="text-xs neu-inset p-3" style={{ color: "var(--text)" }}>
-                    {r.request_note}
-                  </p>
-                )}
-
-                {r.status !== "pending" && (
-                  <div className="neu-inset p-3.5 space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className="font-bold" style={{ color: "var(--ok)" }}>
-                        {t("reviews.regNoLabel")}: {r.clinician_reg_no || "—"}
-                      </span>
-                      {r.reviewed_at && (
-                        <span style={{ color: "var(--text-muted)" }}>
-                          {t("reviews.reviewedAtLabel")}: {new Date(r.reviewed_at).toLocaleString()}
-                        </span>
+                  {r.payment_status === "unpaid" && (
+                    <div className="neu-inset p-3.5 space-y-1.5">
+                      <p className="text-xs sm:text-sm font-bold" style={{ color: "var(--saffron-text)" }}>
+                        {t("reviews.doctorRequestedFeeBanner", {
+                          doctor: r.doctor_name,
+                          fee: r.fee_bdt,
+                        })}
+                      </p>
+                      {r.fee_note && (
+                        <p className="text-xs" style={{ color: "var(--text)" }}>
+                          {t("reviews.feeNoteLabel")}: {r.fee_note}
+                        </p>
                       )}
                     </div>
-                    {r.clinician_note && (
-                      <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
-                        {t("reviews.doctorNoteLabel")}: {r.clinician_note}
-                      </p>
-                    )}
-                    {r.approved_diet_presets.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                        <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
-                          {t("reviews.approvedPresetsLabel")}:
-                        </span>
-                        {r.approved_diet_presets.map((pk) => (
-                          <Badge
-                            key={pk}
-                            variant="INFO"
-                            label={KNOWN_PRESETS.includes(pk) ? t(`members.presets.${pk}`) : pk}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
-                  {r.payment_status === "unpaid" && (
-                    <Button
-                      variant="primary"
-                      className="!min-h-[40px] !px-3.5 !py-1.5 !text-xs"
-                      onClick={() => {
-                        setPayTarget(r);
-                        setPayMethod("bkash");
-                        setPayRef("");
-                      }}
-                      data-testid="review-pay-btn"
-                    >
-                      <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>{t("reviews.payFeeBtn")}</span>
-                    </Button>
                   )}
 
-                  <Button
-                    variant="neu"
-                    className="!min-h-[40px] !px-3.5 !py-1.5 !text-xs"
-                    onClick={() => {
-                      if (typeof window !== "undefined") {
-                        void navigator.clipboard.writeText(fullPortalUrl(r.review_url_path));
-                        showToast(t("common.copied"), "success");
-                      }
-                    }}
-                  >
-                    <Copy className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>{t("reviews.copyLinkBtn")}</span>
-                  </Button>
+                  {r.request_note && (
+                    <p className="text-xs neu-inset p-3" style={{ color: "var(--text)" }}>
+                      {r.request_note}
+                    </p>
+                  )}
 
-                  {r.doctor_email && (
-                    <a
-                      href={buildMailtoHref(r)}
-                      className="neu-raised-sm inline-flex min-h-[40px] items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold"
+                  {emailExpanded && r.email_body && (
+                    <pre
+                      className="neu-inset p-3 text-xs whitespace-pre-wrap font-sans leading-relaxed"
                       style={{ color: "var(--text)" }}
                     >
-                      <Mail className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
-                      <span>{t("reviews.emailDraftBtn")}</span>
-                    </a>
+                      {r.email_body}
+                    </pre>
                   )}
 
-                  <Link
-                    href={r.review_url_path}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="neu-raised-sm inline-flex min-h-[40px] items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                    <span>{t("reviews.openPortalBtn")}</span>
-                  </Link>
-                </div>
-              </Card>
-            ))}
+                  {r.status !== "pending" && (
+                    <div className="neu-inset p-3.5 space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <span className="font-bold" style={{ color: "var(--ok)" }}>
+                          {t("reviews.regNoLabel")}: {r.clinician_reg_no || "—"}
+                        </span>
+                        {r.reviewed_at && (
+                          <span style={{ color: "var(--text-muted)" }}>
+                            {t("reviews.reviewedAtLabel")}: {new Date(r.reviewed_at).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                      {r.clinician_note && (
+                        <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                          {t("reviews.doctorNoteLabel")}: {r.clinician_note}
+                        </p>
+                      )}
+                      {r.approved_diet_presets.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
+                            {t("reviews.approvedPresetsLabel")}:
+                          </span>
+                          {r.approved_diet_presets.map((pk) => (
+                            <Badge
+                              key={pk}
+                              variant="INFO"
+                              label={KNOWN_PRESETS.includes(pk) ? t(`members.presets.${pk}`) : pk}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[var(--border-subtle)]">
+                    {r.payment_status === "unpaid" && (
+                      <Button
+                        variant="primary"
+                        className="!min-h-[40px] !px-3.5 !py-1.5 !text-xs"
+                        onClick={() => {
+                          setPayTarget(r);
+                          setPayMethod("bkash");
+                          setPayRef("");
+                        }}
+                        data-testid="review-pay-btn"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{t("reviews.payFeeBtn")}</span>
+                      </Button>
+                    )}
+
+                    <Button
+                      variant="neu"
+                      className="!min-h-[40px] !px-3.5 !py-1.5 !text-xs"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          void navigator.clipboard.writeText(fullPortalUrl(r.review_url_path));
+                          showToast(t("common.copied"), "success");
+                        }
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t("reviews.copyLinkBtn")}</span>
+                    </Button>
+
+                    {r.email_body && (
+                      <Button
+                        variant="ghost"
+                        className="!min-h-[40px] !px-3 !py-1.5 !text-xs"
+                        onClick={() => setExpandedEmailId(emailExpanded ? null : r.id)}
+                      >
+                        <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{emailExpanded ? t("reviews.hideEmailBtn") : t("reviews.viewEmailBtn")}</span>
+                      </Button>
+                    )}
+
+                    {r.doctor_email && (
+                      <a
+                        href={buildMailtoHref(r)}
+                        className="neu-raised-sm inline-flex min-h-[40px] items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold"
+                        style={{ color: "var(--text)" }}
+                      >
+                        <Mail className="h-3.5 w-3.5" style={{ color: "var(--accent)" }} aria-hidden="true" />
+                        <span>{t("reviews.emailDraftBtn")}</span>
+                      </a>
+                    )}
+
+                    <Link
+                      href={r.review_url_path}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="neu-raised-sm inline-flex min-h-[40px] items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold"
+                      style={{ color: "var(--accent)" }}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span>{t("reviews.openPortalBtn")}</span>
+                    </Link>
+                  </div>
+                </Card>
+              );
+            })}
           </div>
         )
       ) : reviews.length === 0 ? (
@@ -555,7 +654,9 @@ export default function ReviewsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className="font-mono text-base font-extrabold" style={{ color: "var(--accent)" }}>
-                  {formatNumber(r.fee_bdt)} {t("common.bdt")}
+                  {r.payment_status === "awaiting_fee"
+                    ? "—"
+                    : `${formatNumber(r.fee_bdt)} ${t("common.bdt")}`}
                 </span>
                 {r.payment_status === "unpaid" && (
                   <Button
@@ -591,6 +692,11 @@ export default function ReviewsPage() {
               <p className="font-mono font-extrabold" style={{ color: "var(--accent)" }}>
                 {formatNumber(payTarget.fee_bdt)} {t("common.bdt")}
               </p>
+              {payTarget.fee_note && (
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                  {payTarget.fee_note}
+                </p>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -639,4 +745,3 @@ export default function ReviewsPage() {
     </div>
   );
 }
-

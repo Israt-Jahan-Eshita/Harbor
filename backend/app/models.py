@@ -420,7 +420,7 @@ class ClinicianReview(Base):
         ),
         CheckConstraint("fee_bdt >= 0", name="ck_clinician_reviews_fee_non_negative"),
         CheckConstraint(
-            "payment_status IN ('unpaid', 'paid', 'waived')",
+            "payment_status IN ('awaiting_fee', 'unpaid', 'paid', 'waived')",
             name="ck_clinician_reviews_payment_status",
         ),
         CheckConstraint(
@@ -449,9 +449,11 @@ class ClinicianReview(Base):
     doctor_email: Mapped[str | None] = mapped_column(Text, nullable=True)
     contact_mode: Mapped[str] = mapped_column(Text, nullable=False, default="email_invite")
     request_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    email_body: Mapped[str | None] = mapped_column(Text, nullable=True)
     clinical_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
-    fee_bdt: Mapped[int] = mapped_column(Integer, nullable=False, default=500)
-    payment_status: Mapped[str] = mapped_column(Text, nullable=False, default="unpaid")
+    fee_bdt: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    fee_note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payment_status: Mapped[str] = mapped_column(Text, nullable=False, default="awaiting_fee")
     payment_method: Mapped[str | None] = mapped_column(Text, nullable=True)
     payment_ref: Mapped[str | None] = mapped_column(Text, nullable=True)
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
